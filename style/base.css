@@ -3,3 +3,9 @@
 
     https://jupyterlab.readthedocs.io/en/stable/developer/css.html
 */
+.litchiWidget {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: auto;
+}

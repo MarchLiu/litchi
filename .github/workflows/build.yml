@@ -41,7 +41,7 @@ jobs:
         python -m pip install .[test]
 
         jupyter labextension list
-        jupyter labextension list 2>&1 | grep -ie "lichi.*OK"
+        jupyter labextension list 2>&1 | grep -ie "litchi.*OK"
         python -m jupyterlab.browser_check
 
     - name: Package the extension
@@ -50,13 +50,13 @@ jobs:
 
         pip install build
         python -m build
-        pip uninstall -y "lichi" jupyterlab
+        pip uninstall -y "litchi" jupyterlab
 
     - name: Upload extension packages
       uses: actions/upload-artifact@v4
       with:
         name: extension-artifacts
-        path: dist/lichi*
+        path: dist/litchi*
         if-no-files-found: error
 
   test_isolated:
@@ -79,11 +79,11 @@ jobs:
         sudo rm -rf $(which node)
         sudo rm -rf $(which node)
 
-        pip install "jupyterlab>=4.0.0,<5" lichi*.whl
+        pip install "jupyterlab>=4.0.0,<5" litchi*.whl
 
 
         jupyter labextension list
-        jupyter labextension list 2>&1 | grep -ie "lichi.*OK"
+        jupyter labextension list 2>&1 | grep -ie "litchi.*OK"
         python -m jupyterlab.browser_check --no-browser-test
 
   integration-tests:
@@ -109,7 +109,7 @@ jobs:
     - name: Install the extension
       run: |
         set -eux
-        python -m pip install "jupyterlab>=4.0.0,<5" lichi*.whl
+        python -m pip install "jupyterlab>=4.0.0,<5" litchi*.whl
 
     - name: Install dependencies
       working-directory: ui-tests
@@ -138,7 +138,7 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: lichi-playwright-tests
+        name: litchi-playwright-tests
         path: |
           ui-tests/test-results
           ui-tests/playwright-report
