@@ -97,3 +97,10 @@ More information are provided within the [ui-tests](./ui-tests/README.md) README
 ### Packaging the extension
 
 See [RELEASE](RELEASE.md)
+
+## What's new
+
+### 0.1.0
+
+* chat with ollama in localhost:11434
+* select model in list

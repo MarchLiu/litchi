@@ -1,71 +1,115 @@
-import { IDisposable, DisposableDelegate } from '@lumino/disposable';
-
-import { Widget } from '@lumino/widgets';
-
+import { WidgetExtension } from './toolbar';
+// activate.tsx
 import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
+import { ICommandPalette } from '@jupyterlab/apputils';
+import { IStateDB } from '@jupyterlab/statedb';
+import { chat, IMessage, Message } from './ollama';
+import { MarkdownCellModel } from '@jupyterlab/cells'
+import { INotebookTracker } from "@jupyterlab/notebook";
 
-import { DocumentRegistry } from '@jupyterlab/docregistry';
+const ACTIVATE_COMMAND_ID = 'litchi:chat';
 
-import { NotebookPanel, INotebookModel } from '@jupyterlab/notebook';
+namespace CommandIDs {
+  export const CHAT = ACTIVATE_COMMAND_ID;
+}
+const LITCHI_SESSION = 'litchi:session';
+const LITCHI_LATEST = 'litchi:latest';
 
 /**
  * The plugin registration information.
  */
 const plugin: JupyterFrontEndPlugin<void> = {
-  activate,
-  id: 'my-extension-name:widgetPlugin',
+  id: 'litchi',
   description: 'Add a widget to the notebook header.',
-  autoStart: true
+  autoStart: true,
+  activate: activate,
+  requires: [ICommandPalette, IStateDB, INotebookTracker]
 };
 
-/**
- * A notebook widget extension that adds a widget in the notebook header (widget below the toolbar).
- */
-export class WidgetExtension
-  implements DocumentRegistry.IWidgetExtension<NotebookPanel, INotebookModel>
-{
-  /**
-   * Create a new extension object.
-   */
-  createNew(
-    panel: NotebookPanel,
-    context: DocumentRegistry.IContext<INotebookModel>
-  ): IDisposable {
-    const widget = new Widget({ node: Private.createNode() });
-    widget.addClass('jp-myextension-myheader');
+export function activate(
+  app: JupyterFrontEnd,
+  palette: ICommandPalette,
+  state: IStateDB,
+  tracker: INotebookTracker,
+) {
+  const widget = new WidgetExtension(app, state);
+  widget.addClass('jp-litchi-toolbar');
 
-    panel.contentHeader.insertWidget(0, widget);
-    return new DisposableDelegate(() => {
-      widget.dispose();
-    });
-  }
+  app.docRegistry.addWidgetExtension('Notebook', widget);
+  // const tracker = new NotebookTracker({ namespace: 'litchi' });
+  console.log('add command litchi:chat');
+
+  app.commands.addCommand(CommandIDs.CHAT, {
+    label: 'Litchi Chat',
+    execute: async () => {
+      const session: IMessage[] = await fetchState(state, LITCHI_SESSION, [
+        Message.startUp()
+      ]);
+      const cell = tracker.activeCell;
+      if (cell === null) {
+        console.error('litchi:chat exit because any cell not been selected');
+        return;
+      }
+
+      const notebook = tracker.currentWidget?.content;
+      if (notebook === undefined) {
+        console.error('litchi:chat exit because the notebook not found');
+        return;
+      }
+
+      const content = cell.model.sharedModel.source;
+      // eslint-disable-next-line eqeqeq
+      if (content === null) {
+        console.error('litchi:chat exit because the content of cell is null');
+        return;
+      }
+      const model = (await state.fetch('litchi:model'))?.toString();
+      if (model === null || model === undefined) {
+        console.error('litchi:chat exit because not any model selected');
+        return;
+      }
+
+      const latest = new Message('user', content);
+      await state.save(LITCHI_LATEST, JSON.stringify(latest));
+
+      const message = await chat(session, latest, model!);
+      console.log(`received message ${JSON.stringify(message)}`);
+      await state.save(LITCHI_SESSION, JSON.stringify([...session, message]));
+      const cellModel = new MarkdownCellModel();
+      cellModel.sharedModel.setSource(message.content);
+
+      const { commands } = app;
+      commands.execute('notebook:insert-cell-below').then(() => {
+        commands.execute('notebook:change-cell-to-markdown');
+      });
+
+      const newCell = notebook.activeCell!;
+      newCell.model.sharedModel.setSource(message.content);
+    }
+  });
+  // Add the command to the palette.
+  palette.addItem({ command: CommandIDs.CHAT, category: 'Litchi' });
 }
 
-/**
- * Activate the extension.
- */
-function activate(app: JupyterFrontEnd): void {
-  app.docRegistry.addWidgetExtension('Notebook', new WidgetExtension());
+async function fetchState<T>(
+  state: IStateDB,
+  key: string,
+  defaultValue: T
+): Promise<T> {
+  const data: string | undefined = (await state.fetch(key))?.toString();
+  if (data === undefined) {
+    const defaultStr = JSON.stringify(defaultValue);
+    await state.save(key, defaultStr);
+    return defaultValue;
+  } else {
+    return JSON.parse(data) as T;
+  }
 }
 
 /**
  * Export the plugin as default.
  */
 export default plugin;
-
-/**
- * Private helpers
- */
-namespace Private {
-  /**
-   * Generate the widget node
-   */
-  export function createNode(): HTMLElement {
-    const span = document.createElement('span');
-    span.textContent = 'My custom header';
-    return span;
-  }
-}

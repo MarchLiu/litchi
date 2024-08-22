@@ -3,7 +3,7 @@
 
     https://jupyterlab.readthedocs.io/en/stable/developer/css.html
 */
-.jp-myextension-myheader {
+.jp-litchi-toolbar {
     min-height: 20px;
     background-color: lightsalmon;
 }
