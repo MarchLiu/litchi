@@ -4,7 +4,7 @@
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/MarchLiu/litchi/main?urlpath=lab)
 
 
-litchi is a ai client for jupyter lab
+Litchi is a ai client for jupyter lab
 
 ## Requirements
 
@@ -16,7 +16,7 @@ litchi is a ai client for jupyter lab
 To install the extension, execute:
 
 ```bash
-pip install litchi
+pip install jupyter-litchi
 ```
 
 ## Uninstall
@@ -24,7 +24,7 @@ pip install litchi
 To remove the extension, execute:
 
 ```bash
-pip uninstall litchi
+pip uninstall jupyter-litchi
 ```
 
 ## How to use it
@@ -118,6 +118,10 @@ More information are provided within the [ui-tests](./ui-tests/README.md) README
 See [RELEASE](RELEASE.md)
 
 ## What's new
+
+### 0.1.1
+
+* rename project as `jupyter-litchi`
 
 ### 0.1.0
 
