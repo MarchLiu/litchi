@@ -44,8 +44,8 @@ function ModelsComponent(props: { app: JupyterFrontEnd; state: IStateDB }) {
 
   return (
     <span>
-      Litchi Toolbar
-      <label htmlFor="model-select">选择模型:</label>
+      {'(*☻-☻*)'}{' '}
+      <label htmlFor="model-select"> Select Model:</label>
       <select id="model-select" value={selectedModel} onChange={handleChange}>
         {models.map(model => (
           <option key={model} value={model}>
@@ -63,7 +63,8 @@ function ModelsComponent(props: { app: JupyterFrontEnd; state: IStateDB }) {
  */
 export class WidgetExtension
   extends ReactWidget
-  implements DocumentRegistry.IWidgetExtension<NotebookPanel, INotebookModel> {
+  implements DocumentRegistry.IWidgetExtension<NotebookPanel, INotebookModel>
+{
   private readonly state: IStateDB;
   private readonly app: JupyterFrontEnd;
 

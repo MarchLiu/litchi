@@ -9,6 +9,7 @@ litchi is a ai client for jupyter lab
 ## Requirements
 
 - JupyterLab >= 4.0.0
+- Ollama at http://localhost:11434
 
 ## Install
 
@@ -25,6 +26,24 @@ To remove the extension, execute:
 ```bash
 pip uninstall litchi
 ```
+
+## How to use it
+
+After install success. Just start `jupyter lab` in your computer and create a notebook.
+
+You can see the toolbar in jupyterlab notebook:
+
+![Loaded](./doc/images/loaded.png)
+
+Now, we can write content and choice a model from model list in toolbar.
+
+![Loaded](./doc/images/chat.png)
+
+And then use command palette or click the "send activate cell" button
+
+Wait a moment. The replay will place into a new cell below current.
+
+![Loaded](./doc/images/replay.png)
 
 ## Contributing
 
