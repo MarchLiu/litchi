@@ -50,7 +50,7 @@ jobs:
 
         pip install build
         python -m build
-        pip uninstall -y "litchi" jupyterlab
+        pip uninstall -y "jupyter-litchi" jupyterlab
 
     - name: Upload extension packages
       uses: actions/upload-artifact@v4

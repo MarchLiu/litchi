@@ -10,13 +10,15 @@ Litchi is a ai client for jupyter lab
 
 - JupyterLab >= 4.0.0
 - Ollama at http://localhost:11434
+- nodejs 20
+- yarn
 
-## Install
+# Install
 
 To install the extension, execute:
 
 ```bash
-pip install jupyter-litchi
+jupyter labextension install jupyter-litchi
 ```
 
 ## Uninstall
@@ -24,8 +26,15 @@ pip install jupyter-litchi
 To remove the extension, execute:
 
 ```bash
-pip uninstall jupyter-litchi
+jupyter labextension uninstall jupyter-litchi
 ```
+
+### Alter
+
+The commands `jupyter labextension install/uninstall` are deprecated. The official document 
+recommend use pip. But I can' do it. Install by jupyter's labextension
+command is only right way at today. I will try to build a right version install from pypi
+in the future.
 
 ## How to use it
 
@@ -33,17 +42,17 @@ After install success. Just start `jupyter lab` in your computer and create a no
 
 You can see the toolbar in jupyterlab notebook:
 
-![Loaded](./doc/images/loaded.png)
+![Loaded](https://github.com/MarchLiu/litchi/raw/main/doc/images/loaded.png)
 
 Now, we can write content and choice a model from model list in toolbar.
 
-![Loaded](./doc/images/chat.png)
+![Loaded](https://github.com/MarchLiu/litchi/raw/main/doc/images/chat.png)
 
 And then use command palette or click the "send activate cell" button
 
 Wait a moment. The replay will place into a new cell below current.
 
-![Loaded](./doc/images/replay.png)
+![Loaded](https://github.com/MarchLiu/litchi/raw/main/doc/images/replay.png)
 
 ## Contributing
 
@@ -86,7 +95,7 @@ jupyter lab build --minimize=False
 ### Development uninstall
 
 ```bash
-pip uninstall litchi
+pip uninstall jupyter-litchi
 ```
 
 In development mode, you will also need to remove the symlink created by `jupyter labextension develop`
@@ -127,3 +136,7 @@ See [RELEASE](RELEASE.md)
 
 * chat with ollama in localhost:11434
 * select model in list
+
+### 0.1.3
+
+* installer fixed 

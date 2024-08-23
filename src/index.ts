@@ -22,7 +22,7 @@ const LITCHI_LATEST = 'litchi:latest';
  * The plugin registration information.
  */
 const plugin: JupyterFrontEndPlugin<void> = {
-  id: 'litchi',
+  id: 'jupyter-litchi',
   description: 'Add a widget to the notebook header.',
   autoStart: true,
   activate: activate,
@@ -39,7 +39,7 @@ export function activate(
   widget.addClass('jp-litchi-toolbar');
 
   app.docRegistry.addWidgetExtension('Notebook', widget);
-  // const tracker = new NotebookTracker({ namespace: 'litchi' });
+  // const tracker = new NotebookTracker({ namespace: 'jupyter-litchi' });
   console.log('add command litchi:chat');
 
   app.commands.addCommand(CommandIDs.CHAT, {
@@ -91,7 +91,7 @@ export function activate(
     }
   });
   // Add the command to the palette.
-  palette.addItem({ command: CommandIDs.CHAT, category: 'Litchi' });
+  palette.addItem({ command: CommandIDs.CHAT, category: 'jupyter-Litchi' });
 }
 
 async function fetchState<T>(
