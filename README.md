@@ -140,3 +140,22 @@ See [RELEASE](RELEASE.md)
 ### 0.1.3
 
 * installer fixed 
+
+## About Me
+
+My name is Liu Xin, and my English name is Mars Liu and previously used March Liu. I translated the Python
+2.2/2.3/2.4/2.5/2.7 Tutorial under this pseudonym.
+
+In recent years, I published a book titled "Construction and Implementation of Micro Lisp Interpreter", which is based
+on my Jaskell Core library ([https://github.com/MarchLiu/jaskell-core](https://github.com/MarchLiu/jaskell-core)). The
+book introduces some knowledge about interpreter development.
+
+I am one of the earliest users in both the Python Chinese Community and PostgreSQL Chinese Community. At QCon, I
+demonstrated a neural network algorithm implemented using SQL CTE
+syntax: [SQL CTE](https://github.com/MarchLiu/qcon2019shanghai/tree/master/sql-cte).
+
+## Donate
+
+Your sponsorship will contribute to the healthy growth of this project.
+
+[![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/paypalme/marsliuzero)
