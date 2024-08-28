@@ -141,6 +141,10 @@ See [RELEASE](RELEASE.md)
 
 * installer fixed 
 
+### 0.1.4
+
+* add settings
+
 ## About Me
 
 My name is Liu Xin, and my English name is Mars Liu and previously used March Liu. I translated the Python

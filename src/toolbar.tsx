@@ -16,7 +16,6 @@ function ModelsComponent(props: { app: JupyterFrontEnd; state: IStateDB }) {
   // 使用useEffect来在组件加载时获取模型列表
   React.useEffect(() => {
     async function loadModels() {
-      console.log('start load models');
       try {
         const modelList = await listModels('localhost', 11434);
         setModels(modelList);
@@ -34,12 +33,12 @@ function ModelsComponent(props: { app: JupyterFrontEnd; state: IStateDB }) {
   // 处理下拉列表选项变化的事件
   const handleChange = async (event: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedModel(event.target.value);
-    props.state.save('litchi:model', event.target.value);
+    await props.state.save('litchi:model', event.target.value);
   };
 
   const handleChatClick = async (event: React.MouseEvent) => {
     const { commands } = props.app;
-    commands.execute('litchi:chat');
+    await commands.execute('litchi:chat');
   };
 
   return (
@@ -69,7 +68,6 @@ export class WidgetExtension
   private readonly app: JupyterFrontEnd;
 
   protected render() {
-    console.log('rend new litchi widget');
     return <ModelsComponent app={this.app} state={this.state} />;
   }
 

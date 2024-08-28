@@ -1,5 +1,6 @@
 // SendRequestComponent.tsx
 
+
 export interface IMessage {
   role: string;
   content: string;
@@ -15,7 +16,7 @@ export class Message implements IMessage {
   }
 
   static startUp(): Message {
-    return new Message("system", "your are a python and jupyter export");
+    return new Message('system', 'your are a python and jupyter export');
   }
 }
 
@@ -46,6 +47,8 @@ interface IChatResponse {
 }
 
 export async function chat(
+  host: string,
+  port: number,
   session: Message[],
   message: Message,
   model: string
@@ -53,18 +56,18 @@ export async function chat(
   try {
     const messages = [...session, message];
     const request = new ChatRequest(model, messages);
-    const resp = await fetch("http://localhost:11434/api/chat", {
-      method: "POST",
+
+    const resp = await fetch(`http://${host}:${port}/api/chat`, {
+      method: 'POST',
       headers: {
-        "content-type": "application/json"
+        'content-type': 'application/json'
       },
       body: JSON.stringify(request)
     });
     const data = (await resp.json()) as IChatResponse;
-    console.log(JSON.stringify(data));
     return data.message;
   } catch (error) {
-    console.error("Error sending request to server:", error);
+    console.error('Error sending request to server:', error);
     throw error;
   }
 }

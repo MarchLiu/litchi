@@ -1,0 +1,34 @@
+{
+  "title": "Litchi",
+  "description": "AI Plugin for JupyterLab.",
+  "jupyter.lab.menus": {
+    "main": [
+      {
+        "id": "litchi-settings",
+        "label": "Litchi",
+        "rank": 80,
+        "items": [
+          {
+            "command": "jupyter-litchi:toggle-flag"
+          }
+        ]
+      }
+    ]
+  },
+  "properties": {
+    "ollama:host": {
+      "type": "string",
+      "title": "Ollama Host:",
+      "description": "Host or IP address of ollama api.",
+      "default": "localhost"
+    },
+    "ollama:port": {
+      "type": "integer",
+      "title": "Ollama Port:",
+      "description": "Port of ollama api.",
+      "default": 11434
+    }
+  },
+  "additionalProperties": false,
+  "type": "object"
+}
