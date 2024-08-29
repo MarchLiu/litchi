@@ -123,7 +123,6 @@ async function chatActivate(
   if (message.content.length > 0) {
     await state.save(LITCHI_SESSION, JSON.stringify([...session, message]));
     const cellModel = new MarkdownCellModel();
-    console.log(message.content);
     cellModel.sharedModel.setSource(message.content);
   }
 

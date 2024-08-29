@@ -28,7 +28,6 @@ function ModelsComponent(props: {
         const settings = await props.registry.load(props.appId);
         const baseUrl = settings.get('list-models').composite!.toString();
         const key = settings.get('key').composite?.toString();
-        console.log(`loadModels: ${baseUrl}`);
         const modelList = await listModels(baseUrl, key);
         setModels(modelList);
         if (modelList.length > 0) {

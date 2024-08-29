@@ -43,20 +43,15 @@ export async function chat(
     const request = new ChatRequest(model, messages);
     const headers = requestHeaders(key);
 
-    console.log(JSON.stringify(request, null, 2));
-
     const resp = await fetch(url, {
       method: 'POST',
       headers: headers,
       body: JSON.stringify(request)
     });
     const data = await resp.json();
-    console.log(JSON.stringify(data, null, 2));
     if (data.message !== undefined) {
-      console.log(data.message);
       return data.message;
     } else if (data.choices !== undefined) {
-      console.log(`debug info ${data}`);
       const msgs = data.choices.map((c: { message: any }) => c.message);
       if (msgs.length > 0) {
         return msgs[0];
@@ -65,7 +60,7 @@ export async function chat(
   } catch (error) {
     console.error('Error sending request to server:', error);
   }
-  console.log('message not success');
+  console.error('message not success');
   return { message: '', role: 'assistant' };
 }
 
