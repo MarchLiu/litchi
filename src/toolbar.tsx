@@ -8,7 +8,15 @@ import * as React from 'react';
 import { IStateDB } from '@jupyterlab/statedb';
 import { JupyterFrontEnd } from '@jupyterlab/application';
 
-function ModelsComponent(props: { app: JupyterFrontEnd; state: IStateDB }) {
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
+import { listModels } from './api';
+
+function ModelsComponent(props: {
+  appId: string;
+  app: JupyterFrontEnd;
+  registry: ISettingRegistry;
+  state: IStateDB;
+}) {
   // 使用useState来存储模型列表和选中的模型
   const [models, setModels] = React.useState<string[]>([]);
   const [selectedModel, setSelectedModel] = React.useState<string>('');
@@ -17,7 +25,11 @@ function ModelsComponent(props: { app: JupyterFrontEnd; state: IStateDB }) {
   React.useEffect(() => {
     async function loadModels() {
       try {
-        const modelList = await listModels('localhost', 11434);
+        const settings = await props.registry.load(props.appId);
+        const baseUrl = settings.get('list-models').composite!.toString();
+        const key = settings.get('key').composite?.toString();
+        console.log(`loadModels: ${baseUrl}`);
+        const modelList = await listModels(baseUrl, key);
         setModels(modelList);
         if (modelList.length > 0) {
           setSelectedModel(modelList[0]);
@@ -43,8 +55,7 @@ function ModelsComponent(props: { app: JupyterFrontEnd; state: IStateDB }) {
 
   return (
     <span>
-      {'(*☻-☻*)'}{' '}
-      <label htmlFor="model-select"> Select Model:</label>
+      {'(*☻-☻*)'} <label htmlFor="model-select"> Select Model:</label>
       <select id="model-select" value={selectedModel} onChange={handleChange}>
         {models.map(model => (
           <option key={model} value={model}>
@@ -66,15 +77,31 @@ export class WidgetExtension
 {
   private readonly state: IStateDB;
   private readonly app: JupyterFrontEnd;
+  private readonly registry: ISettingRegistry;
+  private readonly appId: string;
 
   protected render() {
-    return <ModelsComponent app={this.app} state={this.state} />;
+    return (
+      <ModelsComponent
+        app={this.app}
+        state={this.state}
+        registry={this.registry}
+        appId={this.appId}
+      />
+    );
   }
 
-  constructor(app: JupyterFrontEnd, state: IStateDB) {
+  constructor(
+    appId: string,
+    app: JupyterFrontEnd,
+    registry: ISettingRegistry,
+    state: IStateDB
+  ) {
     super();
     this.state = state;
     this.app = app;
+    this.registry = registry;
+    this.appId = appId;
   }
 
   /**
@@ -89,17 +116,4 @@ export class WidgetExtension
       this.dispose();
     });
   }
-}
-
-interface IListModelsResponse {
-  models: any[];
-}
-
-async function listModels(host: string, port: number) {
-  const response = await fetch(`http://${host}:${port}/api/tags`, {
-    method: 'GET',
-    headers: new Headers({ 'Content-Type': 'application/json' })
-  });
-  const data = (await response.json()) as IListModelsResponse;
-  return data.models.map(m => m.name);
 }

@@ -16,17 +16,23 @@
     ]
   },
   "properties": {
-    "ollama:host": {
+    "key": {
       "type": "string",
-      "title": "Ollama Host:",
-      "description": "Host or IP address of ollama api.",
-      "default": "localhost"
+      "title": "Authorization Key:",
+      "description": "The AI service API key. If you use a online service as openai, you need set it",
+      "default": ""
     },
-    "ollama:port": {
-      "type": "integer",
-      "title": "Ollama Port:",
-      "description": "Port of ollama api.",
-      "default": 11434
+    "list-models": {
+      "type": "string",
+      "title": "List Models API:",
+      "description": "The AI service URL for list models. The default is ollama in localhost. If you want to connect other service, set it as your need",
+      "default": "http://localhost:11434/api/tags"
+    },
+    "chat": {
+      "type": "string",
+      "title": "Chat API:",
+      "description": "The AI service URL for chat messages. The default is ollama in localhost. If you want to connect other service, set it as your need",
+      "default": "http://localhost:11434/api/chat"
     }
   },
   "additionalProperties": false,

@@ -1,24 +1,24 @@
-import { WidgetExtension } from './toolbar';
+// import { WidgetExtension } from './toolbar';
 // activate.tsx
 import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
-import { ICommandPalette, MainAreaWidget } from '@jupyterlab/apputils';
+import { ICommandPalette } from '@jupyterlab/apputils';
 import { IStateDB } from '@jupyterlab/statedb';
-import { chat, IMessage, Message } from './ollama';
+import { chat, IMessage, Message } from './api';
 import { MarkdownCellModel } from '@jupyterlab/cells';
 import { INotebookTracker } from '@jupyterlab/notebook';
-import { SettingWidget } from './settings';
-import { ISettingRegistry} from '@jupyterlab/settingregistry';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
+import { WidgetExtension } from './toolbar';
 
 const LITCHI_ID = 'jupyter-litchi:jupyter-litchi';
 const ACTIVATE_COMMAND_ID = 'litchi:chat';
-const SETTINGS_COMMAND_ID = 'litchi:settings';
+const CLEAN_COMMAND_ID = 'litchi:clean';
 
 namespace CommandIDs {
   export const CHAT = ACTIVATE_COMMAND_ID;
-  export const SETTINGS = SETTINGS_COMMAND_ID;
+  export const CLEAN = CLEAN_COMMAND_ID;
 }
 const LITCHI_SESSION = 'litchi:session';
 const LITCHI_LATEST = 'litchi:latest';
@@ -31,7 +31,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
   description: 'Add a widget to the notebook header.',
   autoStart: true,
   activate: activate,
-  requires: [ICommandPalette, IStateDB, INotebookTracker, ISettingRegistry],
+  requires: [ICommandPalette, IStateDB, INotebookTracker, ISettingRegistry]
 };
 
 export async function activate(
@@ -41,7 +41,7 @@ export async function activate(
   tracker: INotebookTracker,
   registry: ISettingRegistry
 ) {
-  const widget = new WidgetExtension(app, state);
+  const widget = new WidgetExtension(LITCHI_ID, app, registry, state);
   widget.addClass('jp-litchi-toolbar');
   app.docRegistry.addWidgetExtension('Notebook', widget);
 
@@ -54,34 +54,14 @@ export async function activate(
   // Add the command to the palette.
   palette.addItem({ command: CommandIDs.CHAT, category: 'jupyter-Litchi' });
 
-  const settingsCreator = () => {
-    const content = new SettingWidget(LITCHI_ID, app, registry);
-    const widget = new MainAreaWidget<SettingWidget>({ content });
-    widget.id = 'litchi-settings';
-    widget.title.label = 'Litchi Settings';
-    widget.title.closable = true;
-    return widget;
-  };
-
-  let settingsWidget = settingsCreator();
-  app.commands.addCommand(CommandIDs.SETTINGS, {
-    label: 'Litchi Settings',
-    execute: () => {
-      // Regenerate the widget if disposed
-      if (settingsWidget.isDisposed) {
-        settingsWidget = settingsCreator();
-      }
-      if (!settingsWidget.isAttached) {
-        // Attach the widget to the main work area if it's not there
-        app.shell.add(settingsWidget, 'settings editor');
-      }
-      // Activate the widget
-      app.shell.activateById(settingsWidget.id);
+  app.commands.addCommand(CommandIDs.CLEAN, {
+    label: 'Litchi Clean Session',
+    execute: async () => {
+      await state.save(LITCHI_SESSION, '[]');
     }
   });
-
   // Add the command to the palette.
-  // palette.addItem({ command: CommandIDs.SETTINGS, category: 'jupyter-Litchi' });
+  palette.addItem({ command: CommandIDs.CLEAN, category: 'jupyter-Litchi' });
 }
 
 async function fetchState<T>(
@@ -133,19 +113,19 @@ async function chatActivate(
   }
 
   const settings = await registry.load(LITCHI_ID);
-  const host = settings.get('ollama:host')!.composite!.toString();
-  const port = Number.parseInt(
-    settings.get('ollama:port')!.composite!.toString()
-  );
+  const url = settings.get('chat')!.composite!.toString();
+  const key = settings.get('key')?.composite?.toString();
 
   const latest = new Message('user', content);
   await state.save(LITCHI_LATEST, JSON.stringify(latest));
 
-  const message = await chat(host, port, session, latest, model!);
-  console.log(`received message ${JSON.stringify(message)}`);
-  await state.save(LITCHI_SESSION, JSON.stringify([...session, message]));
-  const cellModel = new MarkdownCellModel();
-  cellModel.sharedModel.setSource(message.content);
+  const message = await chat(url, key, session, latest, model!);
+  if (message.content.length > 0) {
+    await state.save(LITCHI_SESSION, JSON.stringify([...session, message]));
+    const cellModel = new MarkdownCellModel();
+    console.log(message.content);
+    cellModel.sharedModel.setSource(message.content);
+  }
 
   const { commands } = app;
   commands.execute('notebook:insert-cell-below').then(() => {

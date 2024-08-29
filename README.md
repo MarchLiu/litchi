@@ -145,6 +145,11 @@ See [RELEASE](RELEASE.md)
 
 * add settings
 
+### 0.2.0
+
+* Add clean command for clean session
+* Settings for list model api and chat api. Litchi could connect any openai api
+
 ## About Me
 
 My name is Liu Xin, and my English name is Mars Liu and previously used March Liu. I translated the Python

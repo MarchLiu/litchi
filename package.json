@@ -1,13 +1,15 @@
 {
     "name": "jupyter-litchi",
-    "version": "0.1.4",
+    "version": "0.2.0",
     "description": "litchi is a ai client for jupyter lab",
     "keywords": [
         "jupyter",
         "jupyterlab",
         "jupyterlab-extension",
         "ai",
-        "ollama"
+        "ollama",
+        "kimi",
+        "openai"
     ],
     "homepage": "https://github.com/MarchLiu/litchi",
     "bugs": {
