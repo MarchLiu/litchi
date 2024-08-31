@@ -1,5 +1,7 @@
 // SendRequestComponent.tsx
 
+import { ISettingRegistry } from "@jupyterlab/settingregistry";
+
 export interface IMessage {
   role: string;
   content: string;
@@ -14,8 +16,9 @@ export class Message implements IMessage {
     this.content = content;
   }
 
-  static startUp(): Message {
-    return new Message('system', 'your are a python and jupyter export');
+  static async startUp(settings: ISettingRegistry.ISettings): Promise<Message> {
+    const system = settings.get('system').composite!.toString();
+    return new Message('system', system);
   }
 }
 

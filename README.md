@@ -150,6 +150,20 @@ See [RELEASE](RELEASE.md)
 * Add clean command for clean session
 * Settings for list model api and chat api. Litchi could connect any openai api
 
+### 0.3.0
+
+I remove the implicit session of chat. Now we use notebook as chat session.
+
+- command `Litchi Chat` just send current cell content and reply into below
+- command `Litchi Contextual` set current cell content, and with every message above activated cell
+- command `Litchi Historical` set current cell content, and with all cells of above
+
+Very message send or received will marked their 'role' into metadata of the cell.
+
+As command `Litchi Contextual`, the messages only include the cells were marked.
+
+If we want to see the cells role information, could use command `Litchi Show Roles Toggle`.
+
 ## About Me
 
 My name is Liu Xin, and my English name is Mars Liu and previously used March Liu. I translated the Python

@@ -28,10 +28,11 @@ function ModelsComponent(props: {
         const settings = await props.registry.load(props.appId);
         const baseUrl = settings.get('list-models').composite!.toString();
         const key = settings.get('key').composite?.toString();
-        const modelList = await listModels(baseUrl, key);
+        const modelList = await listModels(baseUrl, key).catch(console.error);
         setModels(modelList);
         if (modelList.length > 0) {
           setSelectedModel(modelList[0]);
+          await props.state.save('litchi:model', modelList[0]);
         }
       } catch (error) {
         console.error('Error fetching models:', error);

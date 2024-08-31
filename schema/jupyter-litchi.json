@@ -33,6 +33,12 @@
       "title": "Chat API:",
       "description": "The AI service URL for chat messages. The default is ollama in localhost. If you want to connect other service, set it as your need",
       "default": "http://localhost:11434/api/chat"
+    },
+    "system": {
+      "type": "string",
+      "title": "System Prompt:",
+      "description": "System Prompt would insert into at first of chat messages list with system role.",
+      "default": "your are a python and jupyter export"
     }
   },
   "additionalProperties": false,
