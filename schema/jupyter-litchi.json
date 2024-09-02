@@ -41,6 +41,6 @@
       "default": "your are a python and jupyter export"
     }
   },
-  "additionalProperties": false,
+  "additionalProperties": true,
   "type": "object"
 }

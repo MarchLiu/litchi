@@ -53,6 +53,21 @@ function ModelsComponent(props: {
     await commands.execute('litchi:chat');
   };
 
+  const handleContextualClick = async (event: React.MouseEvent) => {
+    const { commands } = props.app;
+    await commands.execute('litchi:contextual');
+  };
+
+  const handleHistoricalClick = async (event: React.MouseEvent) => {
+    const { commands } = props.app;
+    await commands.execute('litchi:historical');
+  };
+
+  const handleSelectedClick = async (event: React.MouseEvent) => {
+    const { commands } = props.app;
+    await commands.execute('litchi:selected');
+  };
+
   return (
     <span>
       {'(*☻-☻*)'} <label htmlFor="model-select"> Select Model:</label>
@@ -63,7 +78,10 @@ function ModelsComponent(props: {
           </option>
         ))}
       </select>{' '}
-      <button onClick={handleChatClick}>send activate cell</button>
+      <button onClick={handleChatClick}>Chat</button>{' '}
+      <button onClick={handleContextualClick}>Contextual</button>{' '}
+      <button onClick={handleHistoricalClick}>Historical</button>{' '}
+      <button onClick={handleSelectedClick}>Selected</button>
     </span>
   );
 }

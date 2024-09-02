@@ -1,6 +1,6 @@
 {
     "name": "jupyter-litchi",
-    "version": "0.3.0",
+    "version": "0.3.1",
     "description": "litchi is a ai client for jupyter lab",
     "keywords": [
         "jupyter",

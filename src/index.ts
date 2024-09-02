@@ -21,6 +21,7 @@ namespace CommandIDs {
   export const CONTEXTUAL = 'litchi:contextual';
   export const HISTORICAL = 'litchi:historical';
   export const TOGGLE_ROLE = 'litchi:show-roles-toggle';
+  export const SELECTED = 'litchi:selected';
 }
 
 /**
@@ -51,7 +52,6 @@ export async function activate(
       await chatActivate(app, registry, tracker, state, 'chat');
     }
   });
-  // Add the command to the palette.
   palette.addItem({ command: CommandIDs.CHAT, category: 'jupyter-Litchi' });
 
   app.commands.addCommand(CommandIDs.CONTEXTUAL, {
@@ -60,7 +60,6 @@ export async function activate(
       await chatActivate(app, registry, tracker, state, 'contextual');
     }
   });
-  // Add the command to the palette.
   palette.addItem({
     command: CommandIDs.CONTEXTUAL,
     category: 'jupyter-Litchi'
@@ -72,9 +71,19 @@ export async function activate(
       await chatActivate(app, registry, tracker, state, 'historical');
     }
   });
-  // Add the command to the palette.
   palette.addItem({
     command: CommandIDs.HISTORICAL,
+    category: 'jupyter-Litchi'
+  });
+
+  app.commands.addCommand(CommandIDs.SELECTED, {
+    label: 'Litchi Chat Selected',
+    execute: async () => {
+      await chatActivate(app, registry, tracker, state, 'selected');
+    }
+  });
+  palette.addItem({
+    command: CommandIDs.SELECTED,
     category: 'jupyter-Litchi'
   });
 
@@ -86,7 +95,7 @@ export async function activate(
       if (flag !== undefined) {
         showRoles = flag as boolean;
       }
-      state.save('litchi:show-roles', !showRoles);
+      await state.save('litchi:show-roles', !showRoles);
       showRoles = !showRoles;
       const notebook = tracker.currentWidget;
       if (notebook === null) {
@@ -113,7 +122,6 @@ export async function activate(
       }
     }
   });
-  // Add the command to the palette.
   palette.addItem({
     command: CommandIDs.TOGGLE_ROLE,
     category: 'jupyter-Litchi'
@@ -127,7 +135,7 @@ async function chatActivate(
   registry: ISettingRegistry,
   tracker: INotebookTracker,
   state: IStateDB,
-  subTask: 'chat' | 'contextual' | 'historical'
+  subTask: 'chat' | 'contextual' | 'historical' | 'selected'
 ) {
   const cell = tracker.activeCell;
   if (cell === null) {
@@ -166,7 +174,7 @@ async function chatActivate(
   const latest = new Message('user', content);
 
   const message = await chat(url, key, session, latest, model!);
-  if (message.content.length > 0) {
+  if (message.content && message.content.length > 0) {
     const cellModel = new MarkdownCellModel();
     cellModel.sharedModel.setSource(message.content);
     cellModel.sharedModel.setMetadata(LITCHI_MESSAGE_ROLE, message.role);
@@ -210,6 +218,27 @@ function createContext(command: string, notebook: Notebook): IMessage[] {
       for (let idx = 0; idx < stop; idx++) {
         const cell = notebook.model!.cells.get(idx).sharedModel;
         messages = [...messages, cellToMessage(cell)];
+        if (
+          !(LITCHI_MESSAGE_ROLE in cell.metadata) ||
+          cell.metadata[LITCHI_MESSAGE_ROLE] === undefined
+        ) {
+          cell.metadata[LITCHI_MESSAGE_ROLE] = 'user';
+        }
+      }
+      return messages;
+    }
+    case 'selected': {
+      const cells = notebook.selectedCells;
+      let messages: IMessage[] = [];
+      for (let idx = 0; idx < cells.length; idx++) {
+        const cell = cells[idx].model.sharedModel;
+        if (
+          !(LITCHI_MESSAGE_ROLE in cell.metadata) ||
+          cell.metadata[LITCHI_MESSAGE_ROLE] === undefined
+        ) {
+          cell.metadata[LITCHI_MESSAGE_ROLE] = 'user';
+        }
+        messages = [...messages, cellToMessage(cell)];
       }
       return messages;
     }
@@ -224,7 +253,6 @@ function cellToMessage(cell: ISharedCell): IMessage {
   }
   return new Message(role, cell.source);
 }
-
 
 /**
  * Export the plugin as default.

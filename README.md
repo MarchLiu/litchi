@@ -164,6 +164,12 @@ As command `Litchi Contextual`, the messages only include the cells were marked.
 
 If we want to see the cells role information, could use command `Litchi Show Roles Toggle`.
 
+
+### 0.3.1
+
+- Modify the "send activate cell" button to three: Chat, Contextual, Historical.
+- Add `Litchi Chat Selected` command 
+
 ## About Me
 
 My name is Liu Xin, and my English name is Mars Liu and previously used March Liu. I translated the Python
