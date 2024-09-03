@@ -11,7 +11,9 @@ import { MarkdownCellModel } from '@jupyterlab/cells';
 import { INotebookTracker, Notebook } from '@jupyterlab/notebook';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { WidgetExtension } from './toolbar';
-import { ISharedCell } from '@jupyter/ydoc';
+// import { ISharedCell } from '@jupyter/ydoc';
+import { ICellModel } from '@jupyterlab/cells';
+import { DocumentRegistry } from '@jupyterlab/docregistry';
 
 const LITCHI_ID = 'jupyter-litchi:jupyter-litchi';
 
@@ -43,8 +45,8 @@ export async function activate(
   registry: ISettingRegistry
 ) {
   const widget = new WidgetExtension(LITCHI_ID, app, registry, state);
-  widget.addClass('jp-litchi-toolbar');
   app.docRegistry.addWidgetExtension('Notebook', widget);
+  app.docRegistry.changed.connect(docRegistryChangeHandler(tracker, state));
 
   app.commands.addCommand(CommandIDs.CHAT, {
     label: 'Litchi Chat',
@@ -95,37 +97,17 @@ export async function activate(
       if (flag !== undefined) {
         showRoles = flag as boolean;
       }
-      await state.save('litchi:show-roles', !showRoles);
       showRoles = !showRoles;
-      const notebook = tracker.currentWidget;
-      if (notebook === null) {
-        console.log('no notebook was selected');
-        return;
-      }
-      const cells = notebook!.model!.cells!;
-      if (showRoles) {
-        for (let idx = 0; idx < cells.length; idx++) {
-          const cell = cells.get(idx);
-          if (LITCHI_MESSAGE_ROLE in cell.sharedModel.metadata) {
-            const role = cell.sharedModel
-              .getMetadata(LITCHI_MESSAGE_ROLE)!
-              .toString();
-            notebook?.content.widgets[idx].setPrompt(
-              role.charAt(0).toUpperCase()
-            );
-          }
-        }
-      } else {
-        for (let idx = 0; idx < cells.length; idx++) {
-          notebook.content.widgets[idx].setPrompt('');
-        }
-      }
+      await state.save('litchi:show-roles', showRoles);
+      await refreshPage(tracker, state);
     }
   });
   palette.addItem({
     command: CommandIDs.TOGGLE_ROLE,
     category: 'jupyter-Litchi'
   });
+
+  state.save('litchi:show-roles', false);
 }
 
 const LITCHI_MESSAGE_ROLE = 'litchi:message:role';
@@ -156,6 +138,8 @@ async function chatActivate(
     console.error('litchi:chat exit because the content of cell is null');
     return;
   }
+  const latest = cellToMessage(cell.model);
+
   const model = (await state.fetch('litchi:model'))?.toString();
   if (model === null || model === undefined) {
     console.error('litchi:chat exit because not any model selected');
@@ -170,8 +154,6 @@ async function chatActivate(
 
   const url = settings.get('chat')!.composite!.toString();
   const key = settings.get('key')?.composite?.toString();
-
-  const latest = new Message('user', content);
 
   const message = await chat(url, key, session, latest, model!);
   if (message.content && message.content.length > 0) {
@@ -202,10 +184,11 @@ function createContext(command: string, notebook: Notebook): IMessage[] {
       }
       let messages: IMessage[] = [];
       for (let idx = 0; idx < stop; idx++) {
-        const cell = notebook.model!.cells.get(idx).sharedModel;
+        const cell = notebook.model!.cells.get(idx);
+        const model = cell.sharedModel;
         if (
-          LITCHI_MESSAGE_ROLE in cell.metadata &&
-          cell.metadata[LITCHI_MESSAGE_ROLE] !== undefined
+          LITCHI_MESSAGE_ROLE in model.metadata &&
+          model.metadata[LITCHI_MESSAGE_ROLE] !== undefined
         ) {
           messages = [...messages, cellToMessage(cell)];
         }
@@ -216,11 +199,12 @@ function createContext(command: string, notebook: Notebook): IMessage[] {
       const stop = notebook.activeCellIndex;
       let messages: IMessage[] = [];
       for (let idx = 0; idx < stop; idx++) {
-        const cell = notebook.model!.cells.get(idx).sharedModel;
+        const cell = notebook.model!.cells.get(idx);
+        const model = cell.sharedModel;
         messages = [...messages, cellToMessage(cell)];
         if (
-          !(LITCHI_MESSAGE_ROLE in cell.metadata) ||
-          cell.metadata[LITCHI_MESSAGE_ROLE] === undefined
+          !(LITCHI_MESSAGE_ROLE in model.metadata) ||
+          model.metadata[LITCHI_MESSAGE_ROLE] === undefined
         ) {
           cell.metadata[LITCHI_MESSAGE_ROLE] = 'user';
         }
@@ -231,9 +215,10 @@ function createContext(command: string, notebook: Notebook): IMessage[] {
       const cells = notebook.selectedCells;
       let messages: IMessage[] = [];
       for (let idx = 0; idx < cells.length; idx++) {
-        const cell = cells[idx].model.sharedModel;
+        const cell = cells[idx].model;
+        const model = cell.sharedModel;
         if (
-          !(LITCHI_MESSAGE_ROLE in cell.metadata) ||
+          !(LITCHI_MESSAGE_ROLE in model.metadata) ||
           cell.metadata[LITCHI_MESSAGE_ROLE] === undefined
         ) {
           cell.metadata[LITCHI_MESSAGE_ROLE] = 'user';
@@ -246,12 +231,70 @@ function createContext(command: string, notebook: Notebook): IMessage[] {
   return [];
 }
 
-function cellToMessage(cell: ISharedCell): IMessage {
+function cellToMessage(cell: ICellModel): IMessage {
+  const model = cell.sharedModel;
   let role = 'user';
   if (LITCHI_MESSAGE_ROLE in cell.metadata) {
     role = cell.getMetadata(LITCHI_MESSAGE_ROLE)!.toString();
   }
-  return new Message(role, cell.source);
+  let content = model.source;
+  if (model.cell_type === 'code') {
+    let language = '';
+    const tokens = cell.mimeType.split('-');
+    if (tokens.length > 1) {
+      language = tokens[tokens.length - 1];
+    }
+    content = `\`\`\`${language}\n${content}\n\`\`\``;
+  }
+  return new Message(role, content);
+}
+
+function docRegistryChangeHandler(tracker: INotebookTracker, state: IStateDB) {
+  return async (
+    sender: DocumentRegistry,
+    args: DocumentRegistry.IChangedArgs
+  ) => {
+    await refreshPage(tracker, state);
+  };
+}
+
+async function refreshPage(tracker: INotebookTracker, state: IStateDB) {
+  const flag = await state.fetch('litchi:show-roles');
+  let showRoles = false;
+  if (flag !== undefined) {
+    showRoles = flag as boolean;
+  }
+  const notebook = tracker.currentWidget;
+  if (notebook === null) {
+    console.log('no notebook was selected');
+    return;
+  }
+  const cells = notebook!.model!.cells!;
+  if (showRoles) {
+    for (let idx = 0; idx < cells.length; idx++) {
+      const cell = cells.get(idx);
+      if (LITCHI_MESSAGE_ROLE in cell.sharedModel.metadata) {
+        const role = cell.sharedModel
+          .getMetadata(LITCHI_MESSAGE_ROLE)!
+          .toString();
+        notebook?.content.widgets[idx].inputArea?.addClass(
+          `jp-litchi-role-${role}-Cell`
+        );
+      }
+    }
+  } else {
+    for (let idx = 0; idx < cells.length; idx++) {
+      const cell = cells.get(idx);
+      if (LITCHI_MESSAGE_ROLE in cell.sharedModel.metadata) {
+        const role = cell.sharedModel
+          .getMetadata(LITCHI_MESSAGE_ROLE)!
+          .toString();
+        notebook?.content.widgets[idx].inputArea?.removeClass(
+          `jp-litchi-role-${role}-Cell`
+        );
+      }
+    }
+  }
 }
 
 /**

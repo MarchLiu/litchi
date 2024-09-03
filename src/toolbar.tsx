@@ -129,6 +129,7 @@ export class WidgetExtension
     panel: NotebookPanel,
     context: DocumentRegistry.IContext<INotebookModel>
   ): IDisposable {
+    this.addClass('jp-litchi-toolbar');
     panel.contentHeader.insertWidget(0, this);
     return new DisposableDelegate(() => {
       this.dispose();

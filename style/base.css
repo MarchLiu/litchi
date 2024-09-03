@@ -7,3 +7,11 @@
     min-height: 20px;
     background-color: lightsalmon;
 }
+
+.jp-litchi-role-user-Cell .jp-InputPrompt {
+    background-color: lightcyan;
+}
+
+.jp-litchi-role-assistant-Cell .jp-InputPrompt {
+    background-color: lightgoldenrodyellow;
+}

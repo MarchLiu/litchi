@@ -170,6 +170,10 @@ If we want to see the cells role information, could use command `Litchi Show Rol
 - Modify the "send activate cell" button to three: Chat, Contextual, Historical.
 - Add `Litchi Chat Selected` command 
 
+### 0.3.2
+
+- Show message's role by prompt  
+
 ## About Me
 
 My name is Liu Xin, and my English name is Mars Liu and previously used March Liu. I translated the Python
