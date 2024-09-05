@@ -10,18 +10,20 @@ import { JupyterFrontEnd } from '@jupyterlab/application';
 
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { listModels } from './api';
+import { Widget } from '@lumino/widgets';
+import { Signal, ISignal } from '@lumino/signaling';
 
 function ModelsComponent(props: {
   appId: string;
   app: JupyterFrontEnd;
   registry: ISettingRegistry;
   state: IStateDB;
+  waiting: ISignal<Widget, boolean>;
 }) {
-  // 使用useState来存储模型列表和选中的模型
   const [models, setModels] = React.useState<string[]>([]);
   const [selectedModel, setSelectedModel] = React.useState<string>('');
+  const [processing, setProcessing] = React.useState<boolean>(false);
 
-  // 使用useEffect来在组件加载时获取模型列表
   React.useEffect(() => {
     async function loadModels() {
       try {
@@ -42,10 +44,13 @@ function ModelsComponent(props: {
     loadModels();
   }, []);
 
-  // 处理下拉列表选项变化的事件
+  props.waiting.connect((sender, idle) => {
+    setProcessing(idle);
+  });
+
   const handleChange = async (event: React.ChangeEvent<HTMLSelectElement>) => {
+    props.state.save('litchi:model', event.target.value);
     setSelectedModel(event.target.value);
-    await props.state.save('litchi:model', event.target.value);
   };
 
   const handleChatClick = async (event: React.MouseEvent) => {
@@ -78,10 +83,18 @@ function ModelsComponent(props: {
           </option>
         ))}
       </select>{' '}
-      <button onClick={handleChatClick}>Chat</button>{' '}
-      <button onClick={handleContextualClick}>Contextual</button>{' '}
-      <button onClick={handleHistoricalClick}>Historical</button>{' '}
-      <button onClick={handleSelectedClick}>Selected</button>
+      <button disabled={processing} onClick={handleChatClick}>
+        Chat
+      </button>{' '}
+      <button disabled={processing} onClick={handleContextualClick}>
+        Contextual
+      </button>{' '}
+      <button disabled={processing} onClick={handleHistoricalClick}>
+        Historical
+      </button>{' '}
+      <button disabled={processing} onClick={handleSelectedClick}>
+        Selected
+      </button>
     </span>
   );
 }
@@ -97,6 +110,7 @@ export class WidgetExtension
   private readonly app: JupyterFrontEnd;
   private readonly registry: ISettingRegistry;
   private readonly appId: string;
+  public readonly isWaiting;
 
   protected render() {
     return (
@@ -105,6 +119,7 @@ export class WidgetExtension
         state={this.state}
         registry={this.registry}
         appId={this.appId}
+        waiting={this.isWaiting}
       />
     );
   }
@@ -120,6 +135,7 @@ export class WidgetExtension
     this.app = app;
     this.registry = registry;
     this.appId = appId;
+    this.isWaiting = new Signal<Widget, boolean>(this);
   }
 
   /**

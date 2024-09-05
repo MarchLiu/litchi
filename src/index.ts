@@ -11,15 +11,15 @@ import { MarkdownCellModel } from '@jupyterlab/cells';
 import { INotebookTracker, Notebook } from '@jupyterlab/notebook';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { WidgetExtension } from './toolbar';
-// import { ISharedCell } from '@jupyter/ydoc';
 import { ICellModel } from '@jupyterlab/cells';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
+import { Signal } from '@lumino/signaling';
+import { Widget } from '@lumino/widgets';
 
 const LITCHI_ID = 'jupyter-litchi:jupyter-litchi';
 
 namespace CommandIDs {
   export const CHAT = 'litchi:chat';
-  export const CLEAN = 'litchi:clean';
   export const CONTEXTUAL = 'litchi:contextual';
   export const HISTORICAL = 'litchi:historical';
   export const TOGGLE_ROLE = 'litchi:show-roles-toggle';
@@ -51,7 +51,14 @@ export async function activate(
   app.commands.addCommand(CommandIDs.CHAT, {
     label: 'Litchi Chat',
     execute: async () => {
-      await chatActivate(app, registry, tracker, state, 'chat');
+      await chatActivate(
+        app,
+        registry,
+        tracker,
+        state,
+        widget.isWaiting,
+        'chat'
+      );
     }
   });
   palette.addItem({ command: CommandIDs.CHAT, category: 'jupyter-Litchi' });
@@ -59,7 +66,14 @@ export async function activate(
   app.commands.addCommand(CommandIDs.CONTEXTUAL, {
     label: 'Litchi Chat Contextual',
     execute: async () => {
-      await chatActivate(app, registry, tracker, state, 'contextual');
+      await chatActivate(
+        app,
+        registry,
+        tracker,
+        state,
+        widget.isWaiting,
+        'contextual'
+      );
     }
   });
   palette.addItem({
@@ -70,7 +84,14 @@ export async function activate(
   app.commands.addCommand(CommandIDs.HISTORICAL, {
     label: 'Litchi Chat Historical',
     execute: async () => {
-      await chatActivate(app, registry, tracker, state, 'historical');
+      await chatActivate(
+        app,
+        registry,
+        tracker,
+        state,
+        widget.isWaiting,
+        'historical'
+      );
     }
   });
   palette.addItem({
@@ -81,7 +102,14 @@ export async function activate(
   app.commands.addCommand(CommandIDs.SELECTED, {
     label: 'Litchi Chat Selected',
     execute: async () => {
-      await chatActivate(app, registry, tracker, state, 'selected');
+      await chatActivate(
+        app,
+        registry,
+        tracker,
+        state,
+        widget.isWaiting,
+        'selected'
+      );
     }
   });
   palette.addItem({
@@ -117,60 +145,76 @@ async function chatActivate(
   registry: ISettingRegistry,
   tracker: INotebookTracker,
   state: IStateDB,
+  waiting: Signal<Widget, boolean>,
   subTask: 'chat' | 'contextual' | 'historical' | 'selected'
 ) {
-  const cell = tracker.activeCell;
-  if (cell === null) {
-    console.error('litchi:chat exit because any cell not been selected');
-    return;
+  try {
+    let processing: boolean = false;
+    waiting.connect((sender, value) => {
+      processing = value;
+    });
+
+    if (processing) {
+      console.log('an other process is running');
+      return;
+    }
+
+    waiting.emit(true);
+    const cell = tracker.activeCell;
+    if (cell === null) {
+      console.error('litchi:chat exit because any cell not been selected');
+      return;
+    }
+
+    const notebook = tracker.currentWidget?.content;
+    if (notebook === undefined) {
+      console.error('litchi:chat exit because the notebook not found');
+      return;
+    }
+
+    cell.model.sharedModel.setMetadata(LITCHI_MESSAGE_ROLE, 'user');
+    const content = cell.model.sharedModel.source;
+    // eslint-disable-next-line eqeqeq
+    if (content === null) {
+      console.error('litchi:chat exit because the content of cell is null');
+      return;
+    }
+    const latest = cellToMessage(cell.model);
+
+    const model = (await state.fetch('litchi:model'))?.toString();
+    if (model === null || model === undefined) {
+      console.error('litchi:chat exit because not any model selected');
+      return;
+    }
+
+    const settings = await registry.load(LITCHI_ID);
+    const session: IMessage[] = [
+      await Message.startUp(settings),
+      ...createContext(subTask, notebook)
+    ];
+
+    const url = settings.get('chat')!.composite!.toString();
+    const key = settings.get('key')?.composite?.toString();
+
+    const message = await chat(url, key, session, latest, model!);
+    if (message.content && message.content.length > 0) {
+      const cellModel = new MarkdownCellModel();
+      cellModel.sharedModel.setSource(message.content);
+      cellModel.sharedModel.setMetadata(LITCHI_MESSAGE_ROLE, message.role);
+    }
+
+    const { commands } = app;
+    commands.execute('notebook:insert-cell-below').then(() => {
+      commands.execute('notebook:change-cell-to-markdown');
+    });
+
+    const newCell = notebook.activeCell!;
+    const newModel = newCell.model.sharedModel;
+    newModel.setSource(message.content);
+    newModel.setMetadata(LITCHI_MESSAGE_ROLE, message.role);
+  } finally {
+    waiting.emit(false);
   }
-
-  const notebook = tracker.currentWidget?.content;
-  if (notebook === undefined) {
-    console.error('litchi:chat exit because the notebook not found');
-    return;
-  }
-
-  cell.model.sharedModel.setMetadata(LITCHI_MESSAGE_ROLE, 'user');
-  const content = cell.model.sharedModel.source;
-  // eslint-disable-next-line eqeqeq
-  if (content === null) {
-    console.error('litchi:chat exit because the content of cell is null');
-    return;
-  }
-  const latest = cellToMessage(cell.model);
-
-  const model = (await state.fetch('litchi:model'))?.toString();
-  if (model === null || model === undefined) {
-    console.error('litchi:chat exit because not any model selected');
-    return;
-  }
-
-  const settings = await registry.load(LITCHI_ID);
-  const session: IMessage[] = [
-    await Message.startUp(settings),
-    ...createContext(subTask, notebook)
-  ];
-
-  const url = settings.get('chat')!.composite!.toString();
-  const key = settings.get('key')?.composite?.toString();
-
-  const message = await chat(url, key, session, latest, model!);
-  if (message.content && message.content.length > 0) {
-    const cellModel = new MarkdownCellModel();
-    cellModel.sharedModel.setSource(message.content);
-    cellModel.sharedModel.setMetadata(LITCHI_MESSAGE_ROLE, message.role);
-  }
-
-  const { commands } = app;
-  commands.execute('notebook:insert-cell-below').then(() => {
-    commands.execute('notebook:change-cell-to-markdown');
-  });
-
-  const newCell = notebook.activeCell!;
-  const newModel = newCell.model.sharedModel;
-  newModel.setSource(message.content);
-  newModel.setMetadata(LITCHI_MESSAGE_ROLE, message.role);
 }
 
 function createContext(command: string, notebook: Notebook): IMessage[] {

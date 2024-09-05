@@ -6,7 +6,7 @@ this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text()
 
 __import__("setuptools").setup(name="jupyter-litchi",
-                                     version="0.3.2",
+                                     version="0.3.4",
                                      description="Litchi is a Jupyterlab extension for AI Client",
                                      long_description=long_description,
                                      long_description_content_type='text/markdown',
