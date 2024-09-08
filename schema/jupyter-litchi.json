@@ -4,12 +4,27 @@
   "jupyter.lab.menus": {
     "main": [
       {
-        "id": "litchi-settings",
+        "id": "litchi-toggle-rules",
         "label": "Litchi",
         "rank": 80,
         "items": [
           {
-            "command": "jupyter-litchi:toggle-flag"
+            "command": "litchi:chat"
+          },
+          {
+            "command": "litchi:contextual"
+          },
+          {
+            "command": "litchi:historical"
+          },
+          {
+            "command": "litchi:selected"
+          },
+          {
+            "type": "separator"
+          },
+          {
+            "command": "litchi:show-roles-toggle"
           }
         ]
       }

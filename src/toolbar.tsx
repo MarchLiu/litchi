@@ -10,19 +10,18 @@ import { JupyterFrontEnd } from '@jupyterlab/application';
 
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { listModels } from './api';
-import { Widget } from '@lumino/widgets';
-import { Signal, ISignal } from '@lumino/signaling';
+import { Model } from './model';
 
 function ModelsComponent(props: {
   appId: string;
   app: JupyterFrontEnd;
   registry: ISettingRegistry;
   state: IStateDB;
-  waiting: ISignal<Widget, boolean>;
+  model: Model;
 }) {
   const [models, setModels] = React.useState<string[]>([]);
   const [selectedModel, setSelectedModel] = React.useState<string>('');
-  const [processing, setProcessing] = React.useState<boolean>(false);
+  const [processing, setProcessing] = React.useState(props.model.processing);
 
   React.useEffect(() => {
     async function loadModels() {
@@ -44,12 +43,15 @@ function ModelsComponent(props: {
     loadModels();
   }, []);
 
-  props.waiting.connect((sender, idle) => {
-    setProcessing(idle);
-  });
+  React.useEffect(() => {
+    const stateChanged = props.model.stateChanged;
+    stateChanged.connect((m, args) => {
+      setProcessing(m.processing);
+    });
+  }, [props.model]);
 
   const handleChange = async (event: React.ChangeEvent<HTMLSelectElement>) => {
-    props.state.save('litchi:model', event.target.value);
+    await props.state.save('litchi:model', event.target.value);
     setSelectedModel(event.target.value);
   };
 
@@ -110,7 +112,7 @@ export class WidgetExtension
   private readonly app: JupyterFrontEnd;
   private readonly registry: ISettingRegistry;
   private readonly appId: string;
-  public readonly isWaiting;
+  public readonly model: Model;
 
   protected render() {
     return (
@@ -119,7 +121,7 @@ export class WidgetExtension
         state={this.state}
         registry={this.registry}
         appId={this.appId}
-        waiting={this.isWaiting}
+        model={this.model}
       />
     );
   }
@@ -128,14 +130,15 @@ export class WidgetExtension
     appId: string,
     app: JupyterFrontEnd,
     registry: ISettingRegistry,
-    state: IStateDB
+    state: IStateDB,
+    model: Model
   ) {
     super();
     this.state = state;
     this.app = app;
     this.registry = registry;
     this.appId = appId;
-    this.isWaiting = new Signal<Widget, boolean>(this);
+    this.model = model;
   }
 
   /**

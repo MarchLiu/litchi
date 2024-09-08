@@ -126,3 +126,5 @@ dmypy.json
 
 package-lock.json
 yarn.lock
+
+staff/

@@ -13,8 +13,7 @@ import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { WidgetExtension } from './toolbar';
 import { ICellModel } from '@jupyterlab/cells';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
-import { Signal } from '@lumino/signaling';
-import { Widget } from '@lumino/widgets';
+import { Model } from './model';
 
 const LITCHI_ID = 'jupyter-litchi:jupyter-litchi';
 
@@ -34,47 +33,36 @@ const plugin: JupyterFrontEndPlugin<void> = {
   description: 'Add a widget to the notebook header.',
   autoStart: true,
   activate: activate,
-  requires: [ICommandPalette, IStateDB, INotebookTracker, ISettingRegistry]
+  requires: [ICommandPalette, INotebookTracker, ISettingRegistry, IStateDB]
 };
 
 export async function activate(
   app: JupyterFrontEnd,
   palette: ICommandPalette,
-  state: IStateDB,
   tracker: INotebookTracker,
-  registry: ISettingRegistry
+  registry: ISettingRegistry,
+  state: IStateDB
 ) {
-  const widget = new WidgetExtension(LITCHI_ID, app, registry, state);
+  const model = new Model();
+  const widget = new WidgetExtension(LITCHI_ID, app, registry, state, model);
   app.docRegistry.addWidgetExtension('Notebook', widget);
-  app.docRegistry.changed.connect(docRegistryChangeHandler(tracker, state));
+  app.docRegistry.changed.connect(docRegistryChangeHandler(tracker, registry));
 
   app.commands.addCommand(CommandIDs.CHAT, {
     label: 'Litchi Chat',
     execute: async () => {
-      await chatActivate(
-        app,
-        registry,
-        tracker,
-        state,
-        widget.isWaiting,
-        'chat'
-      );
-    }
+      await chatActivate(app, registry, tracker, model, state, 'chat');
+    },
+    isEnabled: () => !model.processing
   });
   palette.addItem({ command: CommandIDs.CHAT, category: 'jupyter-Litchi' });
 
   app.commands.addCommand(CommandIDs.CONTEXTUAL, {
     label: 'Litchi Chat Contextual',
     execute: async () => {
-      await chatActivate(
-        app,
-        registry,
-        tracker,
-        state,
-        widget.isWaiting,
-        'contextual'
-      );
-    }
+      await chatActivate(app, registry, tracker, model, state, 'contextual');
+    },
+    isEnabled: () => !model.processing
   });
   palette.addItem({
     command: CommandIDs.CONTEXTUAL,
@@ -84,15 +72,9 @@ export async function activate(
   app.commands.addCommand(CommandIDs.HISTORICAL, {
     label: 'Litchi Chat Historical',
     execute: async () => {
-      await chatActivate(
-        app,
-        registry,
-        tracker,
-        state,
-        widget.isWaiting,
-        'historical'
-      );
-    }
+      await chatActivate(app, registry, tracker, model, state, 'historical');
+    },
+    isEnabled: () => !model.processing
   });
   palette.addItem({
     command: CommandIDs.HISTORICAL,
@@ -102,40 +84,29 @@ export async function activate(
   app.commands.addCommand(CommandIDs.SELECTED, {
     label: 'Litchi Chat Selected',
     execute: async () => {
-      await chatActivate(
-        app,
-        registry,
-        tracker,
-        state,
-        widget.isWaiting,
-        'selected'
-      );
-    }
+      await chatActivate(app, registry, tracker, model, state, 'selected');
+    },
+    isEnabled: () => !model.processing
   });
   palette.addItem({
     command: CommandIDs.SELECTED,
     category: 'jupyter-Litchi'
   });
 
+  model.stateChanged.connect(w => {
+    refreshPage(tracker, w.showRoles);
+  });
   app.commands.addCommand(CommandIDs.TOGGLE_ROLE, {
     label: 'Litchi Show Roles Toggle',
     execute: async () => {
-      const flag = await state.fetch('litchi:show-roles');
-      let showRoles = false;
-      if (flag !== undefined) {
-        showRoles = flag as boolean;
-      }
-      showRoles = !showRoles;
-      await state.save('litchi:show-roles', showRoles);
-      await refreshPage(tracker, state);
-    }
+      model.showRoles = !model.showRoles;
+    },
+    isToggled: () => model.showRoles
   });
   palette.addItem({
     command: CommandIDs.TOGGLE_ROLE,
     category: 'jupyter-Litchi'
   });
-
-  state.save('litchi:show-roles', false);
 }
 
 const LITCHI_MESSAGE_ROLE = 'litchi:message:role';
@@ -144,22 +115,17 @@ async function chatActivate(
   app: JupyterFrontEnd,
   registry: ISettingRegistry,
   tracker: INotebookTracker,
+  model: Model,
   state: IStateDB,
-  waiting: Signal<Widget, boolean>,
   subTask: 'chat' | 'contextual' | 'historical' | 'selected'
 ) {
   try {
-    let processing: boolean = false;
-    waiting.connect((sender, value) => {
-      processing = value;
-    });
-
-    if (processing) {
+    if (model.processing) {
       console.log('an other process is running');
       return;
     }
 
-    waiting.emit(true);
+    model.processing = true;
     const cell = tracker.activeCell;
     if (cell === null) {
       console.error('litchi:chat exit because any cell not been selected');
@@ -181,8 +147,8 @@ async function chatActivate(
     }
     const latest = cellToMessage(cell.model);
 
-    const model = (await state.fetch('litchi:model'))?.toString();
-    if (model === null || model === undefined) {
+    const aiModel = (await state.fetch('litchi:model'))?.toString();
+    if (aiModel === null || aiModel === undefined) {
       console.error('litchi:chat exit because not any model selected');
       return;
     }
@@ -196,7 +162,7 @@ async function chatActivate(
     const url = settings.get('chat')!.composite!.toString();
     const key = settings.get('key')?.composite?.toString();
 
-    const message = await chat(url, key, session, latest, model!);
+    const message = await chat(url, key, session, latest, aiModel!);
     if (message.content && message.content.length > 0) {
       const cellModel = new MarkdownCellModel();
       cellModel.sharedModel.setSource(message.content);
@@ -213,7 +179,7 @@ async function chatActivate(
     newModel.setSource(message.content);
     newModel.setMetadata(LITCHI_MESSAGE_ROLE, message.role);
   } finally {
-    waiting.emit(false);
+    model.processing = false;
   }
 }
 
@@ -293,21 +259,24 @@ function cellToMessage(cell: ICellModel): IMessage {
   return new Message(role, content);
 }
 
-function docRegistryChangeHandler(tracker: INotebookTracker, state: IStateDB) {
+function docRegistryChangeHandler(
+  tracker: INotebookTracker,
+  registry: ISettingRegistry
+) {
   return async (
     sender: DocumentRegistry,
     args: DocumentRegistry.IChangedArgs
   ) => {
-    await refreshPage(tracker, state);
+    const settings = await registry.get(LITCHI_ID, 'toggle-roles');
+    const flag = settings.composite as boolean;
+    await refreshPage(tracker, flag);
   };
 }
 
-async function refreshPage(tracker: INotebookTracker, state: IStateDB) {
-  const flag = await state.fetch('litchi:show-roles');
-  let showRoles = false;
-  if (flag !== undefined) {
-    showRoles = flag as boolean;
-  }
+async function refreshPage(
+  tracker: INotebookTracker,
+  showRoles: boolean
+): Promise<void> {
   const notebook = tracker.currentWidget;
   if (notebook === null) {
     console.log('no notebook was selected');

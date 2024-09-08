@@ -9,7 +9,6 @@ Litchi is a ai client for jupyter lab
 ## Requirements
 
 - JupyterLab >= 4.0.0
-- Ollama at http://localhost:11434
 - nodejs 20
 - yarn
 
@@ -53,6 +52,8 @@ And then use command palette or click the "send activate cell" button
 Wait a moment. The replay will place into a new cell below current.
 
 ![Loaded](https://github.com/MarchLiu/litchi/raw/main/doc/images/replay.png)
+
+At default, Litchi use ollama at http://localhost:11434 . But you can set it connect to any OpenAI like api.
 
 ## Contributing
 
@@ -178,6 +179,11 @@ If we want to see the cells role information, could use command `Litchi Show Rol
 
 - disable toolbar when litchi is waiting response.
 - bugs fixed
+
+### 0.3.5
+
+- add chat commands to main menu
+- fixed show roles toggle command's state
 
 ## About Me
 

@@ -1,6 +1,6 @@
 {
     "name": "jupyter-litchi",
-    "version": "0.3.4",
+    "version": "0.3.5",
     "description": "litchi is a ai client for jupyter lab",
     "keywords": [
         "jupyter",
@@ -69,6 +69,7 @@
     "devDependencies": {
         "@jupyterlab/builder": "^4.0.0",
         "@jupyterlab/docregistry": "^4.2.4",
+        "@jupyterlab/extensionmanager": "^4.2.5",
         "@jupyterlab/notebook": "^4.2.4",
         "@jupyterlab/testutils": "^4.0.0",
         "@jupyterlab/ui-components": "^4.2.4",
