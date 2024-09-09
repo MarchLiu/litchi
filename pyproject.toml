@@ -3,7 +3,7 @@ requires = ["hatchling>=1.5.0", "jupyterlab>=4.0.0,<5", "hatch-nodejs-version>=0
 build-backend = "hatchling.build"
 
 [project]
-name = "jupyter-litchi"
+name = "jupyter_litchi"
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.8"
@@ -33,24 +33,24 @@ source = "nodejs"
 fields = ["description", "authors", "urls", "keywords"]
 
 [tool.hatch.build.targets.sdist]
-artifacts = ["litchi/labextension"]
+artifacts = ["jupyter_litchi/labextension"]
 exclude = [".github", "binder"]
 
 [tool.hatch.build.targets.wheel.shared-data]
-"litchi/labextension" = "share/jupyter/labextensions/litchi"
-"install.json" = "share/jupyter/labextensions/litchi/install.json"
+"jupyter_litchi/labextension" = "share/jupyter/labextensions/jupyter-litchi"
+"install.json" = "share/jupyter/labextensions/jupyter-litchi/install.json"
 
 [tool.hatch.build.hooks.version]
-path = "litchi/_version.py"
+path = "jupyter_litchi/_version.py"
 
 [tool.hatch.build.hooks.jupyter-builder]
 dependencies = ["hatch-jupyter-builder>=0.5"]
 build-function = "hatch_jupyter_builder.npm_builder"
 ensured-targets = [
-    "litchi/labextension/static/style.js",
-    "litchi/labextension/package.json",
+    "jupyter_litchi/labextension/static/style.js",
+    "jupyter_litchi/labextension/package.json",
 ]
-skip-if-exists = ["litchi/labextension/static/style.js"]
+skip-if-exists = ["jupyter_litchi/labextension/static/style.js"]
 
 [tool.hatch.build.hooks.jupyter-builder.build-kwargs]
 build_cmd = "build:prod"
@@ -60,7 +60,7 @@ npm = ["jlpm"]
 build_cmd = "install:extension"
 npm = ["jlpm"]
 source_dir = "src"
-build_dir = "litchi/labextension"
+build_dir = "jupyter_litchi/labextension"
 
 [tool.jupyter-releaser.options]
 version_cmd = "hatch version"
@@ -75,4 +75,3 @@ before-build-python = ["jlpm clean:all"]
 
 [tool.check-wheel-contents]
 ignore = ["W002"]
-

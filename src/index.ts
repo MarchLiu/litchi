@@ -1,19 +1,17 @@
-// import { WidgetExtension } from './toolbar';
-// activate.tsx
 import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
-import { ICommandPalette } from '@jupyterlab/apputils';
+import { ICommandPalette, IToolbarWidgetRegistry } from '@jupyterlab/apputils';
 import { IStateDB } from '@jupyterlab/statedb';
 import { chat, IMessage, Message } from './api';
 import { MarkdownCellModel } from '@jupyterlab/cells';
-import { INotebookTracker, Notebook } from '@jupyterlab/notebook';
+import { INotebookTracker, Notebook,  } from '@jupyterlab/notebook';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { WidgetExtension } from './toolbar';
 import { ICellModel } from '@jupyterlab/cells';
-import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { Model } from './model';
+import { ITranslator } from '@jupyterlab/translation';
 
 const LITCHI_ID = 'jupyter-litchi:jupyter-litchi';
 
@@ -21,9 +19,10 @@ namespace CommandIDs {
   export const CHAT = 'litchi:chat';
   export const CONTEXTUAL = 'litchi:contextual';
   export const HISTORICAL = 'litchi:historical';
-  export const TOGGLE_ROLE = 'litchi:show-roles-toggle';
   export const SELECTED = 'litchi:selected';
+  export const TOGGLE_ROLE = 'litchi:show-roles-toggle';
 }
+const LITCHI_MESSAGE_ROLE = 'litchi:message:role';
 
 /**
  * The plugin registration information.
@@ -33,25 +32,40 @@ const plugin: JupyterFrontEndPlugin<void> = {
   description: 'Add a widget to the notebook header.',
   autoStart: true,
   activate: activate,
-  requires: [ICommandPalette, INotebookTracker, ISettingRegistry, IStateDB]
+  requires: [
+    ICommandPalette,
+    INotebookTracker,
+    ISettingRegistry,
+    IToolbarWidgetRegistry,
+    ITranslator,
+    IStateDB
+  ]
 };
 
 export async function activate(
   app: JupyterFrontEnd,
   palette: ICommandPalette,
   tracker: INotebookTracker,
-  registry: ISettingRegistry,
+  settingRegistry: ISettingRegistry,
+  toolbarRegistry: IToolbarWidgetRegistry,
+  translator: ITranslator,
   state: IStateDB
 ) {
   const model = new Model();
-  const widget = new WidgetExtension(LITCHI_ID, app, registry, state, model);
+  const widget = new WidgetExtension(
+    LITCHI_ID,
+    app,
+    settingRegistry,
+    state,
+    model
+  );
+
   app.docRegistry.addWidgetExtension('Notebook', widget);
-  app.docRegistry.changed.connect(docRegistryChangeHandler(tracker, registry));
 
   app.commands.addCommand(CommandIDs.CHAT, {
     label: 'Litchi Chat',
     execute: async () => {
-      await chatActivate(app, registry, tracker, model, state, 'chat');
+      await chatActivate(app, settingRegistry, tracker, model, state, 'chat');
     },
     isEnabled: () => !model.processing
   });
@@ -60,7 +74,7 @@ export async function activate(
   app.commands.addCommand(CommandIDs.CONTEXTUAL, {
     label: 'Litchi Chat Contextual',
     execute: async () => {
-      await chatActivate(app, registry, tracker, model, state, 'contextual');
+      await chatActivate(app, settingRegistry, tracker, model, state, 'contextual');
     },
     isEnabled: () => !model.processing
   });
@@ -72,7 +86,7 @@ export async function activate(
   app.commands.addCommand(CommandIDs.HISTORICAL, {
     label: 'Litchi Chat Historical',
     execute: async () => {
-      await chatActivate(app, registry, tracker, model, state, 'historical');
+      await chatActivate(app, settingRegistry, tracker, model, state, 'historical');
     },
     isEnabled: () => !model.processing
   });
@@ -84,7 +98,7 @@ export async function activate(
   app.commands.addCommand(CommandIDs.SELECTED, {
     label: 'Litchi Chat Selected',
     execute: async () => {
-      await chatActivate(app, registry, tracker, model, state, 'selected');
+      await chatActivate(app, settingRegistry, tracker, model, state, 'selected');
     },
     isEnabled: () => !model.processing
   });
@@ -108,8 +122,6 @@ export async function activate(
     category: 'jupyter-Litchi'
   });
 }
-
-const LITCHI_MESSAGE_ROLE = 'litchi:message:role';
 
 async function chatActivate(
   app: JupyterFrontEnd,
@@ -257,20 +269,6 @@ function cellToMessage(cell: ICellModel): IMessage {
     content = `\`\`\`${language}\n${content}\n\`\`\``;
   }
   return new Message(role, content);
-}
-
-function docRegistryChangeHandler(
-  tracker: INotebookTracker,
-  registry: ISettingRegistry
-) {
-  return async (
-    sender: DocumentRegistry,
-    args: DocumentRegistry.IChangedArgs
-  ) => {
-    const settings = await registry.get(LITCHI_ID, 'toggle-roles');
-    const flag = settings.composite as boolean;
-    await refreshPage(tracker, flag);
-  };
 }
 
 async function refreshPage(

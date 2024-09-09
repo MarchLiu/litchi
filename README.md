@@ -17,7 +17,7 @@ Litchi is a ai client for jupyter lab
 To install the extension, execute:
 
 ```bash
-jupyter labextension install jupyter-litchi
+pip install jupyter_litchi
 ```
 
 ## Uninstall
@@ -25,15 +25,8 @@ jupyter labextension install jupyter-litchi
 To remove the extension, execute:
 
 ```bash
-jupyter labextension uninstall jupyter-litchi
+pip uninstall jupyter_litchi
 ```
-
-### Alter
-
-The commands `jupyter labextension install/uninstall` are deprecated. The official document 
-recommend use pip. But I can' do it. Install by jupyter's labextension
-command is only right way at today. I will try to build a right version install from pypi
-in the future.
 
 ## How to use it
 
@@ -184,6 +177,11 @@ If we want to see the cells role information, could use command `Litchi Show Rol
 
 - add chat commands to main menu
 - fixed show roles toggle command's state
+
+### 0.3.6
+
+- bugs fixed
+- now the pip package worked!
 
 ## About Me
 

@@ -139,6 +139,7 @@ export class WidgetExtension
     this.registry = registry;
     this.appId = appId;
     this.model = model;
+    this.id = 'litchi-toolbar';
   }
 
   /**
