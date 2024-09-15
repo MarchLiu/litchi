@@ -1,6 +1,6 @@
 {
     "name": "jupyter-litchi",
-    "version": "0.3.6",
+    "version": "0.3.8",
     "description": "A JupyterLab extension.",
     "keywords": [
         "jupyter",
@@ -198,5 +198,6 @@
             "selector-no-vendor-prefix": null,
             "value-no-vendor-prefix": null
         }
-    }
+    },
+    "packageManager": "yarn@4.4.1"
 }

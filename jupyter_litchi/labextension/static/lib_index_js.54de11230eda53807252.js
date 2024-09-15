@@ -475,8 +475,9 @@ function ModelsComponent(props) {
         });
     }, [props.model]);
     const handleChange = async (event) => {
-        await props.state.save('litchi:model', event.target.value);
-        setSelectedModel(event.target.value);
+        const model = event.target.value;
+        await props.state.save('litchi:model', model);
+        setSelectedModel(model);
     };
     const handleChatClick = async (event) => {
         const { commands } = props.app;
@@ -540,4 +541,4 @@ class WidgetExtension extends _jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE
 /***/ })
 
 }]);
-//# sourceMappingURL=lib_index_js.34eb056ef428e5cc1a97.js.map
+//# sourceMappingURL=lib_index_js.54de11230eda53807252.js.map

@@ -51,8 +51,9 @@ function ModelsComponent(props: {
   }, [props.model]);
 
   const handleChange = async (event: React.ChangeEvent<HTMLSelectElement>) => {
-    await props.state.save('litchi:model', event.target.value);
-    setSelectedModel(event.target.value);
+    const model = event.target.value;
+    await props.state.save('litchi:model', model);
+    setSelectedModel(model);
   };
 
   const handleChatClick = async (event: React.MouseEvent) => {

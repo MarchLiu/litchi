@@ -1,6 +1,6 @@
 {
   "name": "jupyter-litchi",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "description": "A JupyterLab extension.",
   "keywords": [
     "jupyter",
@@ -18,7 +18,7 @@
   },
   "license": "BSD-3-Clause",
   "author": {
-    "name": "Liu Xin",
+    "name": "Mars Liu",
     "email": "mars.liu@outlook.com"
   },
   "files": [
@@ -105,7 +105,7 @@
     "outputDir": "jupyter_litchi/labextension",
     "schemaDir": "schema",
     "_build": {
-      "load": "static/remoteEntry.fa8cafc8e6b668778309.js",
+      "load": "static/remoteEntry.15ce7629f89f1b196adf.js",
       "extension": "./extension",
       "style": "./style"
     }
@@ -203,5 +203,6 @@
       "selector-no-vendor-prefix": null,
       "value-no-vendor-prefix": null
     }
-  }
+  },
+  "packageManager": "yarn@4.4.1"
 }

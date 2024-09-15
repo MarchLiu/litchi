@@ -183,6 +183,10 @@ If we want to see the cells role information, could use command `Litchi Show Rol
 - bugs fixed
 - now the pip package worked!
 
+### 0.3.8
+
+The bug of models selector fixed.
+
 ## About Me
 
 My name is Liu Xin, and my English name is Mars Liu and previously used March Liu. I translated the Python
