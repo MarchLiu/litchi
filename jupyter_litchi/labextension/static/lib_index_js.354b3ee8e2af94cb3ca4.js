@@ -97,6 +97,32 @@ function requestHeaders(key) {
 
 /***/ }),
 
+/***/ "./lib/constants.js":
+/*!**************************!*\
+  !*** ./lib/constants.js ***!
+  \**************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   CommandIDs: () => (/* binding */ CommandIDs),
+/* harmony export */   LITCHI_ID: () => (/* binding */ LITCHI_ID),
+/* harmony export */   LITCHI_MESSAGE_ROLE: () => (/* binding */ LITCHI_MESSAGE_ROLE)
+/* harmony export */ });
+const LITCHI_ID = 'jupyter-litchi:jupyter-litchi';
+var CommandIDs;
+(function (CommandIDs) {
+    CommandIDs.CHAT = 'litchi:chat';
+    CommandIDs.CONTEXTUAL = 'litchi:contextual';
+    CommandIDs.HISTORICAL = 'litchi:historical';
+    CommandIDs.SELECTED = 'litchi:selected';
+    CommandIDs.TOGGLE_ROLE = 'litchi:show-roles-toggle';
+})(CommandIDs || (CommandIDs = {}));
+const LITCHI_MESSAGE_ROLE = 'litchi:message:role';
+
+
+/***/ }),
+
 /***/ "./lib/index.js":
 /*!**********************!*\
   !*** ./lib/index.js ***!
@@ -112,17 +138,21 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _jupyterlab_apputils__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_jupyterlab_apputils__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _jupyterlab_statedb__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @jupyterlab/statedb */ "webpack/sharing/consume/default/@jupyterlab/statedb");
 /* harmony import */ var _jupyterlab_statedb__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_jupyterlab_statedb__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _api__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./api */ "./lib/api.js");
+/* harmony import */ var _api__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./api */ "./lib/api.js");
 /* harmony import */ var _jupyterlab_cells__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @jupyterlab/cells */ "webpack/sharing/consume/default/@jupyterlab/cells");
 /* harmony import */ var _jupyterlab_cells__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_jupyterlab_cells__WEBPACK_IMPORTED_MODULE_2__);
 /* harmony import */ var _jupyterlab_notebook__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @jupyterlab/notebook */ "webpack/sharing/consume/default/@jupyterlab/notebook");
 /* harmony import */ var _jupyterlab_notebook__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_jupyterlab_notebook__WEBPACK_IMPORTED_MODULE_3__);
 /* harmony import */ var _jupyterlab_settingregistry__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @jupyterlab/settingregistry */ "webpack/sharing/consume/default/@jupyterlab/settingregistry");
 /* harmony import */ var _jupyterlab_settingregistry__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(_jupyterlab_settingregistry__WEBPACK_IMPORTED_MODULE_4__);
-/* harmony import */ var _toolbar__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./toolbar */ "./lib/toolbar.js");
-/* harmony import */ var _model__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./model */ "./lib/model.js");
+/* harmony import */ var _toolbar__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./toolbar */ "./lib/toolbar.js");
+/* harmony import */ var _model__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./model */ "./lib/model.js");
 /* harmony import */ var _jupyterlab_translation__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @jupyterlab/translation */ "webpack/sharing/consume/default/@jupyterlab/translation");
 /* harmony import */ var _jupyterlab_translation__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(_jupyterlab_translation__WEBPACK_IMPORTED_MODULE_5__);
+/* harmony import */ var _constants__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./constants */ "./lib/constants.js");
+/* harmony import */ var _jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @jupyterlab/ui-components */ "webpack/sharing/consume/default/@jupyterlab/ui-components");
+/* harmony import */ var _jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(_jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_6__);
+/* harmony import */ var _settings__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./settings */ "./lib/settings.js");
 
 
 
@@ -132,24 +162,18 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-const LITCHI_ID = 'jupyter-litchi:jupyter-litchi';
-var CommandIDs;
-(function (CommandIDs) {
-    CommandIDs.CHAT = 'litchi:chat';
-    CommandIDs.CONTEXTUAL = 'litchi:contextual';
-    CommandIDs.HISTORICAL = 'litchi:historical';
-    CommandIDs.SELECTED = 'litchi:selected';
-    CommandIDs.TOGGLE_ROLE = 'litchi:show-roles-toggle';
-})(CommandIDs || (CommandIDs = {}));
-const LITCHI_MESSAGE_ROLE = 'litchi:message:role';
+
+
+
 /**
  * The plugin registration information.
  */
 const plugin = {
-    id: LITCHI_ID,
+    id: _constants__WEBPACK_IMPORTED_MODULE_7__.LITCHI_ID,
     description: 'Add a widget to the notebook header.',
     autoStart: true,
     activate: activate,
+    optional: [_jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_6__.IFormRendererRegistry],
     requires: [
         _jupyterlab_apputils__WEBPACK_IMPORTED_MODULE_0__.ICommandPalette,
         _jupyterlab_notebook__WEBPACK_IMPORTED_MODULE_3__.INotebookTracker,
@@ -159,19 +183,19 @@ const plugin = {
         _jupyterlab_statedb__WEBPACK_IMPORTED_MODULE_1__.IStateDB
     ]
 };
-async function activate(app, palette, tracker, settingRegistry, toolbarRegistry, translator, state) {
-    const model = new _model__WEBPACK_IMPORTED_MODULE_6__.Model();
-    const widget = new _toolbar__WEBPACK_IMPORTED_MODULE_7__.WidgetExtension(LITCHI_ID, app, settingRegistry, state, model);
+async function activate(app, palette, tracker, settingRegistry, toolbarRegistry, translator, state, formRendererRegistry) {
+    const model = new _model__WEBPACK_IMPORTED_MODULE_8__.Model();
+    const widget = new _toolbar__WEBPACK_IMPORTED_MODULE_9__.WidgetExtension(_constants__WEBPACK_IMPORTED_MODULE_7__.LITCHI_ID, app, settingRegistry, state, model);
     app.docRegistry.addWidgetExtension('Notebook', widget);
-    app.commands.addCommand(CommandIDs.CHAT, {
+    app.commands.addCommand(_constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.CHAT, {
         label: 'Litchi Chat',
         execute: async () => {
             await chatActivate(app, settingRegistry, tracker, model, state, 'chat');
         },
         isEnabled: () => !model.processing
     });
-    palette.addItem({ command: CommandIDs.CHAT, category: 'jupyter-Litchi' });
-    app.commands.addCommand(CommandIDs.CONTEXTUAL, {
+    palette.addItem({ command: _constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.CHAT, category: 'jupyter-Litchi' });
+    app.commands.addCommand(_constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.CONTEXTUAL, {
         label: 'Litchi Chat Contextual',
         execute: async () => {
             await chatActivate(app, settingRegistry, tracker, model, state, 'contextual');
@@ -179,10 +203,10 @@ async function activate(app, palette, tracker, settingRegistry, toolbarRegistry,
         isEnabled: () => !model.processing
     });
     palette.addItem({
-        command: CommandIDs.CONTEXTUAL,
+        command: _constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.CONTEXTUAL,
         category: 'jupyter-Litchi'
     });
-    app.commands.addCommand(CommandIDs.HISTORICAL, {
+    app.commands.addCommand(_constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.HISTORICAL, {
         label: 'Litchi Chat Historical',
         execute: async () => {
             await chatActivate(app, settingRegistry, tracker, model, state, 'historical');
@@ -190,10 +214,10 @@ async function activate(app, palette, tracker, settingRegistry, toolbarRegistry,
         isEnabled: () => !model.processing
     });
     palette.addItem({
-        command: CommandIDs.HISTORICAL,
+        command: _constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.HISTORICAL,
         category: 'jupyter-Litchi'
     });
-    app.commands.addCommand(CommandIDs.SELECTED, {
+    app.commands.addCommand(_constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.SELECTED, {
         label: 'Litchi Chat Selected',
         execute: async () => {
             await chatActivate(app, settingRegistry, tracker, model, state, 'selected');
@@ -201,13 +225,13 @@ async function activate(app, palette, tracker, settingRegistry, toolbarRegistry,
         isEnabled: () => !model.processing
     });
     palette.addItem({
-        command: CommandIDs.SELECTED,
+        command: _constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.SELECTED,
         category: 'jupyter-Litchi'
     });
     model.stateChanged.connect(w => {
         refreshPage(tracker, w.showRoles);
     });
-    app.commands.addCommand(CommandIDs.TOGGLE_ROLE, {
+    app.commands.addCommand(_constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.TOGGLE_ROLE, {
         label: 'Litchi Show Roles Toggle',
         execute: async () => {
             model.showRoles = !model.showRoles;
@@ -215,8 +239,13 @@ async function activate(app, palette, tracker, settingRegistry, toolbarRegistry,
         isToggled: () => model.showRoles
     });
     palette.addItem({
-        command: CommandIDs.TOGGLE_ROLE,
+        command: _constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.TOGGLE_ROLE,
         category: 'jupyter-Litchi'
+    });
+    app.restored.then(() => {
+        if (formRendererRegistry) {
+            (0,_settings__WEBPACK_IMPORTED_MODULE_10__.renderer)(settingRegistry, formRendererRegistry);
+        }
     });
 }
 async function chatActivate(app, registry, tracker, model, state, subTask) {
@@ -237,7 +266,7 @@ async function chatActivate(app, registry, tracker, model, state, subTask) {
             console.error('litchi:chat exit because the notebook not found');
             return;
         }
-        cell.model.sharedModel.setMetadata(LITCHI_MESSAGE_ROLE, 'user');
+        cell.model.sharedModel.setMetadata(_constants__WEBPACK_IMPORTED_MODULE_7__.LITCHI_MESSAGE_ROLE, 'user');
         const content = cell.model.sharedModel.source;
         // eslint-disable-next-line eqeqeq
         if (content === null) {
@@ -250,18 +279,18 @@ async function chatActivate(app, registry, tracker, model, state, subTask) {
             console.error('litchi:chat exit because not any model selected');
             return;
         }
-        const settings = await registry.load(LITCHI_ID);
+        const settings = await registry.load(_constants__WEBPACK_IMPORTED_MODULE_7__.LITCHI_ID);
         const session = [
-            await _api__WEBPACK_IMPORTED_MODULE_8__.Message.startUp(settings),
+            await _api__WEBPACK_IMPORTED_MODULE_11__.Message.startUp(settings),
             ...createContext(subTask, notebook)
         ];
         const url = settings.get('chat').composite.toString();
         const key = (_d = (_c = settings.get('key')) === null || _c === void 0 ? void 0 : _c.composite) === null || _d === void 0 ? void 0 : _d.toString();
-        const message = await (0,_api__WEBPACK_IMPORTED_MODULE_8__.chat)(url, key, session, latest, aiModel);
+        const message = await (0,_api__WEBPACK_IMPORTED_MODULE_11__.chat)(url, key, session, latest, aiModel);
         if (message.content && message.content.length > 0) {
             const cellModel = new _jupyterlab_cells__WEBPACK_IMPORTED_MODULE_2__.MarkdownCellModel();
             cellModel.sharedModel.setSource(message.content);
-            cellModel.sharedModel.setMetadata(LITCHI_MESSAGE_ROLE, message.role);
+            cellModel.sharedModel.setMetadata(_constants__WEBPACK_IMPORTED_MODULE_7__.LITCHI_MESSAGE_ROLE, message.role);
         }
         const { commands } = app;
         commands.execute('notebook:insert-cell-below').then(() => {
@@ -270,7 +299,7 @@ async function chatActivate(app, registry, tracker, model, state, subTask) {
         const newCell = notebook.activeCell;
         const newModel = newCell.model.sharedModel;
         newModel.setSource(message.content);
-        newModel.setMetadata(LITCHI_MESSAGE_ROLE, message.role);
+        newModel.setMetadata(_constants__WEBPACK_IMPORTED_MODULE_7__.LITCHI_MESSAGE_ROLE, message.role);
     }
     finally {
         model.processing = false;
@@ -289,8 +318,8 @@ function createContext(command, notebook) {
             for (let idx = 0; idx < stop; idx++) {
                 const cell = notebook.model.cells.get(idx);
                 const model = cell.sharedModel;
-                if (LITCHI_MESSAGE_ROLE in model.metadata &&
-                    model.metadata[LITCHI_MESSAGE_ROLE] !== undefined) {
+                if (_constants__WEBPACK_IMPORTED_MODULE_7__.LITCHI_MESSAGE_ROLE in model.metadata &&
+                    model.metadata[_constants__WEBPACK_IMPORTED_MODULE_7__.LITCHI_MESSAGE_ROLE] !== undefined) {
                     messages = [...messages, cellToMessage(cell)];
                 }
             }
@@ -303,9 +332,9 @@ function createContext(command, notebook) {
                 const cell = notebook.model.cells.get(idx);
                 const model = cell.sharedModel;
                 messages = [...messages, cellToMessage(cell)];
-                if (!(LITCHI_MESSAGE_ROLE in model.metadata) ||
-                    model.metadata[LITCHI_MESSAGE_ROLE] === undefined) {
-                    cell.metadata[LITCHI_MESSAGE_ROLE] = 'user';
+                if (!(_constants__WEBPACK_IMPORTED_MODULE_7__.LITCHI_MESSAGE_ROLE in model.metadata) ||
+                    model.metadata[_constants__WEBPACK_IMPORTED_MODULE_7__.LITCHI_MESSAGE_ROLE] === undefined) {
+                    cell.metadata[_constants__WEBPACK_IMPORTED_MODULE_7__.LITCHI_MESSAGE_ROLE] = 'user';
                 }
             }
             return messages;
@@ -316,9 +345,9 @@ function createContext(command, notebook) {
             for (let idx = 0; idx < cells.length; idx++) {
                 const cell = cells[idx].model;
                 const model = cell.sharedModel;
-                if (!(LITCHI_MESSAGE_ROLE in model.metadata) ||
-                    cell.metadata[LITCHI_MESSAGE_ROLE] === undefined) {
-                    cell.metadata[LITCHI_MESSAGE_ROLE] = 'user';
+                if (!(_constants__WEBPACK_IMPORTED_MODULE_7__.LITCHI_MESSAGE_ROLE in model.metadata) ||
+                    cell.metadata[_constants__WEBPACK_IMPORTED_MODULE_7__.LITCHI_MESSAGE_ROLE] === undefined) {
+                    cell.metadata[_constants__WEBPACK_IMPORTED_MODULE_7__.LITCHI_MESSAGE_ROLE] = 'user';
                 }
                 messages = [...messages, cellToMessage(cell)];
             }
@@ -330,8 +359,8 @@ function createContext(command, notebook) {
 function cellToMessage(cell) {
     const model = cell.sharedModel;
     let role = 'user';
-    if (LITCHI_MESSAGE_ROLE in cell.metadata) {
-        role = cell.getMetadata(LITCHI_MESSAGE_ROLE).toString();
+    if (_constants__WEBPACK_IMPORTED_MODULE_7__.LITCHI_MESSAGE_ROLE in cell.metadata) {
+        role = cell.getMetadata(_constants__WEBPACK_IMPORTED_MODULE_7__.LITCHI_MESSAGE_ROLE).toString();
     }
     let content = model.source;
     if (model.cell_type === 'code') {
@@ -342,7 +371,7 @@ function cellToMessage(cell) {
         }
         content = `\`\`\`${language}\n${content}\n\`\`\``;
     }
-    return new _api__WEBPACK_IMPORTED_MODULE_8__.Message(role, content);
+    return new _api__WEBPACK_IMPORTED_MODULE_11__.Message(role, content);
 }
 async function refreshPage(tracker, showRoles) {
     var _a, _b;
@@ -355,9 +384,9 @@ async function refreshPage(tracker, showRoles) {
     if (showRoles) {
         for (let idx = 0; idx < cells.length; idx++) {
             const cell = cells.get(idx);
-            if (LITCHI_MESSAGE_ROLE in cell.sharedModel.metadata) {
+            if (_constants__WEBPACK_IMPORTED_MODULE_7__.LITCHI_MESSAGE_ROLE in cell.sharedModel.metadata) {
                 const role = cell.sharedModel
-                    .getMetadata(LITCHI_MESSAGE_ROLE)
+                    .getMetadata(_constants__WEBPACK_IMPORTED_MODULE_7__.LITCHI_MESSAGE_ROLE)
                     .toString();
                 (_a = notebook === null || notebook === void 0 ? void 0 : notebook.content.widgets[idx].inputArea) === null || _a === void 0 ? void 0 : _a.addClass(`jp-litchi-role-${role}-Cell`);
             }
@@ -366,9 +395,9 @@ async function refreshPage(tracker, showRoles) {
     else {
         for (let idx = 0; idx < cells.length; idx++) {
             const cell = cells.get(idx);
-            if (LITCHI_MESSAGE_ROLE in cell.sharedModel.metadata) {
+            if (_constants__WEBPACK_IMPORTED_MODULE_7__.LITCHI_MESSAGE_ROLE in cell.sharedModel.metadata) {
                 const role = cell.sharedModel
-                    .getMetadata(LITCHI_MESSAGE_ROLE)
+                    .getMetadata(_constants__WEBPACK_IMPORTED_MODULE_7__.LITCHI_MESSAGE_ROLE)
                     .toString();
                 (_b = notebook === null || notebook === void 0 ? void 0 : notebook.content.widgets[idx].inputArea) === null || _b === void 0 ? void 0 : _b.removeClass(`jp-litchi-role-${role}-Cell`);
             }
@@ -418,6 +447,62 @@ class Model extends _jupyterlab_apputils__WEBPACK_IMPORTED_MODULE_0__.VDomModel 
         this._processing = value;
         this.stateChanged.emit();
     }
+}
+
+
+/***/ }),
+
+/***/ "./lib/settings.js":
+/*!*************************!*\
+  !*** ./lib/settings.js ***!
+  \*************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   renderAvailableProviders: () => (/* binding */ renderAvailableProviders),
+/* harmony export */   renderer: () => (/* binding */ renderer)
+/* harmony export */ });
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "webpack/sharing/consume/default/react");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _constants__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./constants */ "./lib/constants.js");
+
+
+function renderer(settingRegistry, formRegistry) {
+    const renderer = {
+        fieldRenderer: props => {
+            return renderAvailableProviders(props);
+        }
+    };
+    formRegistry.addRenderer(`${_constants__WEBPACK_IMPORTED_MODULE_1__.LITCHI_ID}.system`, renderer);
+}
+/**
+ * Custom setting renderer.
+ */
+function renderAvailableProviders(props) {
+    const { schema } = props;
+    const title = schema.title;
+    const desc = schema.description;
+    const settings = props.formContext.settings;
+    const settingData = settings.get('system').composite.toString();
+    const [system, setSystem] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(settingData);
+    const onSettingChange = (e) => {
+        const value = e.target.value;
+        settings.set('system', value).catch(console.error);
+        setSystem(value);
+    };
+    return (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null,
+        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("fieldset", null,
+            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("legend", null, title),
+            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { className: "field-description" }, desc),
+            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { key: "system", className: "form-group small-field" },
+                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null,
+                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h3", null,
+                        " ",
+                        desc,
+                        " "),
+                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "inputFieldWrapper" },
+                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("textarea", { className: "form-control", value: system, onChange: onSettingChange })))))));
 }
 
 
@@ -541,4 +626,4 @@ class WidgetExtension extends _jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE
 /***/ })
 
 }]);
-//# sourceMappingURL=lib_index_js.54de11230eda53807252.js.map
+//# sourceMappingURL=lib_index_js.354b3ee8e2af94cb3ca4.js.map

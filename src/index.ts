@@ -13,16 +13,9 @@ import { ICellModel } from '@jupyterlab/cells';
 import { Model } from './model';
 import { ITranslator } from '@jupyterlab/translation';
 
-const LITCHI_ID = 'jupyter-litchi:jupyter-litchi';
-
-namespace CommandIDs {
-  export const CHAT = 'litchi:chat';
-  export const CONTEXTUAL = 'litchi:contextual';
-  export const HISTORICAL = 'litchi:historical';
-  export const SELECTED = 'litchi:selected';
-  export const TOGGLE_ROLE = 'litchi:show-roles-toggle';
-}
-const LITCHI_MESSAGE_ROLE = 'litchi:message:role';
+import { LITCHI_ID, CommandIDs, LITCHI_MESSAGE_ROLE } from './constants';
+import { IFormRendererRegistry } from "@jupyterlab/ui-components";
+import { renderer } from "./settings";
 
 /**
  * The plugin registration information.
@@ -32,6 +25,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
   description: 'Add a widget to the notebook header.',
   autoStart: true,
   activate: activate,
+  optional: [IFormRendererRegistry],
   requires: [
     ICommandPalette,
     INotebookTracker,
@@ -49,7 +43,8 @@ export async function activate(
   settingRegistry: ISettingRegistry,
   toolbarRegistry: IToolbarWidgetRegistry,
   translator: ITranslator,
-  state: IStateDB
+  state: IStateDB,
+  formRendererRegistry: IFormRendererRegistry | null
 ) {
   const model = new Model();
   const widget = new WidgetExtension(
@@ -74,7 +69,14 @@ export async function activate(
   app.commands.addCommand(CommandIDs.CONTEXTUAL, {
     label: 'Litchi Chat Contextual',
     execute: async () => {
-      await chatActivate(app, settingRegistry, tracker, model, state, 'contextual');
+      await chatActivate(
+        app,
+        settingRegistry,
+        tracker,
+        model,
+        state,
+        'contextual'
+      );
     },
     isEnabled: () => !model.processing
   });
@@ -86,7 +88,14 @@ export async function activate(
   app.commands.addCommand(CommandIDs.HISTORICAL, {
     label: 'Litchi Chat Historical',
     execute: async () => {
-      await chatActivate(app, settingRegistry, tracker, model, state, 'historical');
+      await chatActivate(
+        app,
+        settingRegistry,
+        tracker,
+        model,
+        state,
+        'historical'
+      );
     },
     isEnabled: () => !model.processing
   });
@@ -98,7 +107,14 @@ export async function activate(
   app.commands.addCommand(CommandIDs.SELECTED, {
     label: 'Litchi Chat Selected',
     execute: async () => {
-      await chatActivate(app, settingRegistry, tracker, model, state, 'selected');
+      await chatActivate(
+        app,
+        settingRegistry,
+        tracker,
+        model,
+        state,
+        'selected'
+      );
     },
     isEnabled: () => !model.processing
   });
@@ -120,6 +136,12 @@ export async function activate(
   palette.addItem({
     command: CommandIDs.TOGGLE_ROLE,
     category: 'jupyter-Litchi'
+  });
+
+  app.restored.then(() => {
+    if (formRendererRegistry) {
+      renderer(settingRegistry, formRendererRegistry);
+    }
   });
 }
 
