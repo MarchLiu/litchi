@@ -4,7 +4,7 @@
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/MarchLiu/litchi/main?urlpath=lab)
 
 
-Litchi is a ai client for jupyter lab
+Litchi is an AI extension for jupyter lab
 
 ## Requirements
 
