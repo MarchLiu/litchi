@@ -154,8 +154,15 @@ export class WidgetExtension
     panel: NotebookPanel,
     context: DocumentRegistry.IContext<INotebookModel>
   ): IDisposable {
+    const widget = new WidgetExtension(
+      this.id,
+      this.app,
+      this.registry,
+      this.state,
+      this.model
+    );
     this.addClass('jp-litchi-toolbar');
-    panel.toolbar.addItem('litchi:model-list', this);
+    panel.toolbar.addItem('litchi:model-list', widget);
     return new DisposableDelegate(() => {
       this.dispose();
     });

@@ -682,8 +682,9 @@ class WidgetExtension extends _jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE
      * Create a new extension object.
      */
     createNew(panel, context) {
+        const widget = new WidgetExtension(this.id, this.app, this.registry, this.state, this.model);
         this.addClass('jp-litchi-toolbar');
-        panel.toolbar.addItem('litchi:model-list', this);
+        panel.toolbar.addItem('litchi:model-list', widget);
         return new _lumino_disposable__WEBPACK_IMPORTED_MODULE_0__.DisposableDelegate(() => {
             this.dispose();
         });
@@ -694,4 +695,4 @@ class WidgetExtension extends _jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE
 /***/ })
 
 }]);
-//# sourceMappingURL=lib_index_js.7467c77b4a0d312fc0ee.js.map
+//# sourceMappingURL=lib_index_js.e46d5073f6a7ab9b89d4.js.map
