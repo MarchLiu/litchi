@@ -1,13 +1,15 @@
-import { VDomModel } from "@jupyterlab/apputils";
+import { VDomModel } from '@jupyterlab/apputils';
 
 export class Model extends VDomModel {
   private _showRoles: boolean;
   private _processing: boolean;
+  private _idle: boolean;
 
   constructor() {
     super();
     this._showRoles = false;
     this._processing = false;
+    this._idle = true;
   }
 
   get showRoles(): boolean {
@@ -27,5 +29,9 @@ export class Model extends VDomModel {
   set processing(value: boolean) {
     this._processing = value;
     this.stateChanged.emit();
+  }
+
+  get idle() {
+    return this._idle;
   }
 }

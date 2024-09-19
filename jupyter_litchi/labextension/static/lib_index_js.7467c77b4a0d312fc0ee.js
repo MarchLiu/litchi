@@ -107,7 +107,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   CommandIDs: () => (/* binding */ CommandIDs),
 /* harmony export */   LITCHI_ID: () => (/* binding */ LITCHI_ID),
-/* harmony export */   LITCHI_MESSAGE_ROLE: () => (/* binding */ LITCHI_MESSAGE_ROLE)
+/* harmony export */   LITCHI_MESSAGE_ROLE: () => (/* binding */ LITCHI_MESSAGE_ROLE),
+/* harmony export */   LITCHI_TOOLBAR_FACTORY: () => (/* binding */ LITCHI_TOOLBAR_FACTORY)
 /* harmony export */ });
 const LITCHI_ID = 'jupyter-litchi:jupyter-litchi';
 var CommandIDs;
@@ -119,6 +120,64 @@ var CommandIDs;
     CommandIDs.TOGGLE_ROLE = 'litchi:show-roles-toggle';
 })(CommandIDs || (CommandIDs = {}));
 const LITCHI_MESSAGE_ROLE = 'litchi:message:role';
+const LITCHI_TOOLBAR_FACTORY = 'litchi:toolbar-factory';
+
+
+/***/ }),
+
+/***/ "./lib/icons.js":
+/*!**********************!*\
+  !*** ./lib/icons.js ***!
+  \**********************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   caIcon: () => (/* binding */ caIcon),
+/* harmony export */   chIcon: () => (/* binding */ chIcon),
+/* harmony export */   csIcon: () => (/* binding */ csIcon),
+/* harmony export */   ctIcon: () => (/* binding */ ctIcon),
+/* harmony export */   litchiIcon: () => (/* binding */ litchiIcon)
+/* harmony export */ });
+/* harmony import */ var _jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @jupyterlab/ui-components */ "webpack/sharing/consume/default/@jupyterlab/ui-components");
+/* harmony import */ var _jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_0__);
+
+const litchiIcon = new _jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_0__.LabIcon({
+    name: 'litchi-icon',
+    svgstr: '<svg width="200px" height="200px" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">\n' +
+        '  <ellipse cx="100" cy="100" rx="50" ry="40" fill="#FF6347" />\n' +
+        '  <path d="M100,60 Q90,20 110,20 Q120,40 100,60" fill="#228B22" />\n' +
+        '  <circle cx="70" cy="90" r="5" fill="#FFFFFF" />\n' +
+        '  <circle cx="130" cy="90" r="5" fill="#FFFFFF" />\n' +
+        '  <circle cx="90" cy="110" r="5" fill="#FFFFFF" />\n' +
+        '  <circle cx="110" cy="110" r="5" fill="#FFFFFF" />\n' +
+        '  <line x1="100" y1="140" x2="100" y2="160" stroke="#8B4513" stroke-width="2" />\n' +
+        '</svg>'
+});
+const caIcon = new _jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_0__.LabIcon({
+    name: 'litchi-ca',
+    svgstr: '<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">\n' +
+        '    <text x="0" y="10" font-family="Arial" font-size="10" fill="black">CA</text>\n' +
+        '</svg>'
+});
+const chIcon = new _jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_0__.LabIcon({
+    name: 'litchi-ch',
+    svgstr: '<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">\n' +
+        '    <text x="0" y="10" font-family="Arial" font-size="10" fill="black">CH</text>\n' +
+        '</svg>'
+});
+const csIcon = new _jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_0__.LabIcon({
+    name: 'litchi-cs',
+    svgstr: '<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">\n' +
+        '    <text x="0" y="10" font-family="Arial" font-size="10" fill="black">CS</text>\n' +
+        '</svg>'
+});
+const ctIcon = new _jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_0__.LabIcon({
+    name: 'litchi-ct',
+    svgstr: '<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">\n' +
+        '    <text x="0" y="10" font-family="Arial" font-size="10" fill="black">CT</text>\n' +
+        '</svg>'
+});
 
 
 /***/ }),
@@ -138,7 +197,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _jupyterlab_apputils__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_jupyterlab_apputils__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _jupyterlab_statedb__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @jupyterlab/statedb */ "webpack/sharing/consume/default/@jupyterlab/statedb");
 /* harmony import */ var _jupyterlab_statedb__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_jupyterlab_statedb__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _api__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./api */ "./lib/api.js");
+/* harmony import */ var _api__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./api */ "./lib/api.js");
 /* harmony import */ var _jupyterlab_cells__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @jupyterlab/cells */ "webpack/sharing/consume/default/@jupyterlab/cells");
 /* harmony import */ var _jupyterlab_cells__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_jupyterlab_cells__WEBPACK_IMPORTED_MODULE_2__);
 /* harmony import */ var _jupyterlab_notebook__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @jupyterlab/notebook */ "webpack/sharing/consume/default/@jupyterlab/notebook");
@@ -152,7 +211,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _constants__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./constants */ "./lib/constants.js");
 /* harmony import */ var _jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @jupyterlab/ui-components */ "webpack/sharing/consume/default/@jupyterlab/ui-components");
 /* harmony import */ var _jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(_jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_6__);
-/* harmony import */ var _settings__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./settings */ "./lib/settings.js");
+/* harmony import */ var _settings__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./settings */ "./lib/settings.js");
+/* harmony import */ var _icons__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./icons */ "./lib/icons.js");
+
 
 
 
@@ -192,7 +253,8 @@ async function activate(app, palette, tracker, settingRegistry, toolbarRegistry,
         execute: async () => {
             await chatActivate(app, settingRegistry, tracker, model, state, 'chat');
         },
-        isEnabled: () => !model.processing
+        icon: _icons__WEBPACK_IMPORTED_MODULE_10__.caIcon,
+        isEnabled: () => model.idle
     });
     palette.addItem({ command: _constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.CHAT, category: 'jupyter-Litchi' });
     app.commands.addCommand(_constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.CONTEXTUAL, {
@@ -200,7 +262,8 @@ async function activate(app, palette, tracker, settingRegistry, toolbarRegistry,
         execute: async () => {
             await chatActivate(app, settingRegistry, tracker, model, state, 'contextual');
         },
-        isEnabled: () => !model.processing
+        icon: _icons__WEBPACK_IMPORTED_MODULE_10__.ctIcon,
+        isEnabled: () => model.idle
     });
     palette.addItem({
         command: _constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.CONTEXTUAL,
@@ -211,7 +274,8 @@ async function activate(app, palette, tracker, settingRegistry, toolbarRegistry,
         execute: async () => {
             await chatActivate(app, settingRegistry, tracker, model, state, 'historical');
         },
-        isEnabled: () => !model.processing
+        icon: _icons__WEBPACK_IMPORTED_MODULE_10__.chIcon,
+        isEnabled: () => model.idle
     });
     palette.addItem({
         command: _constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.HISTORICAL,
@@ -222,7 +286,8 @@ async function activate(app, palette, tracker, settingRegistry, toolbarRegistry,
         execute: async () => {
             await chatActivate(app, settingRegistry, tracker, model, state, 'selected');
         },
-        isEnabled: () => !model.processing
+        icon: _icons__WEBPACK_IMPORTED_MODULE_10__.csIcon,
+        isEnabled: () => model.idle
     });
     palette.addItem({
         command: _constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.SELECTED,
@@ -236,7 +301,8 @@ async function activate(app, palette, tracker, settingRegistry, toolbarRegistry,
         execute: async () => {
             model.showRoles = !model.showRoles;
         },
-        isToggled: () => model.showRoles
+        isToggled: () => model.showRoles,
+        isEnabled: () => !model.processing
     });
     palette.addItem({
         command: _constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.TOGGLE_ROLE,
@@ -244,7 +310,7 @@ async function activate(app, palette, tracker, settingRegistry, toolbarRegistry,
     });
     app.restored.then(() => {
         if (formRendererRegistry) {
-            (0,_settings__WEBPACK_IMPORTED_MODULE_10__.renderer)(settingRegistry, formRendererRegistry);
+            (0,_settings__WEBPACK_IMPORTED_MODULE_11__.renderer)(settingRegistry, formRendererRegistry);
         }
     });
 }
@@ -281,12 +347,12 @@ async function chatActivate(app, registry, tracker, model, state, subTask) {
         }
         const settings = await registry.load(_constants__WEBPACK_IMPORTED_MODULE_7__.LITCHI_ID);
         const session = [
-            await _api__WEBPACK_IMPORTED_MODULE_11__.Message.startUp(settings),
+            await _api__WEBPACK_IMPORTED_MODULE_12__.Message.startUp(settings),
             ...createContext(subTask, notebook)
         ];
         const url = settings.get('chat').composite.toString();
         const key = (_d = (_c = settings.get('key')) === null || _c === void 0 ? void 0 : _c.composite) === null || _d === void 0 ? void 0 : _d.toString();
-        const message = await (0,_api__WEBPACK_IMPORTED_MODULE_11__.chat)(url, key, session, latest, aiModel);
+        const message = await (0,_api__WEBPACK_IMPORTED_MODULE_12__.chat)(url, key, session, latest, aiModel);
         if (message.content && message.content.length > 0) {
             const cellModel = new _jupyterlab_cells__WEBPACK_IMPORTED_MODULE_2__.MarkdownCellModel();
             cellModel.sharedModel.setSource(message.content);
@@ -371,7 +437,7 @@ function cellToMessage(cell) {
         }
         content = `\`\`\`${language}\n${content}\n\`\`\``;
     }
-    return new _api__WEBPACK_IMPORTED_MODULE_11__.Message(role, content);
+    return new _api__WEBPACK_IMPORTED_MODULE_12__.Message(role, content);
 }
 async function refreshPage(tracker, showRoles) {
     var _a, _b;
@@ -430,6 +496,7 @@ class Model extends _jupyterlab_apputils__WEBPACK_IMPORTED_MODULE_0__.VDomModel 
         super();
         this._showRoles = false;
         this._processing = false;
+        this._idle = true;
     }
     get showRoles() {
         return this._showRoles;
@@ -446,6 +513,9 @@ class Model extends _jupyterlab_apputils__WEBPACK_IMPORTED_MODULE_0__.VDomModel 
     set processing(value) {
         this._processing = value;
         this.stateChanged.emit();
+    }
+    get idle() {
+        return this._idle;
     }
 }
 
@@ -580,9 +650,7 @@ function ModelsComponent(props) {
         const { commands } = props.app;
         await commands.execute('litchi:selected');
     };
-    return (react__WEBPACK_IMPORTED_MODULE_2__.createElement("span", null,
-        '(*☻-☻*)',
-        " ",
+    return (react__WEBPACK_IMPORTED_MODULE_2__.createElement("div", null,
         react__WEBPACK_IMPORTED_MODULE_2__.createElement("label", { htmlFor: "model-select" }, " Select Model:"),
         react__WEBPACK_IMPORTED_MODULE_2__.createElement("select", { id: "model-select", value: selectedModel, onChange: handleChange }, models.map(model => (react__WEBPACK_IMPORTED_MODULE_2__.createElement("option", { key: model, value: model }, model)))),
         ' ',
@@ -615,7 +683,7 @@ class WidgetExtension extends _jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE
      */
     createNew(panel, context) {
         this.addClass('jp-litchi-toolbar');
-        panel.contentHeader.insertWidget(0, this);
+        panel.toolbar.addItem('litchi:model-list', this);
         return new _lumino_disposable__WEBPACK_IMPORTED_MODULE_0__.DisposableDelegate(() => {
             this.dispose();
         });
@@ -626,4 +694,4 @@ class WidgetExtension extends _jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE
 /***/ })
 
 }]);
-//# sourceMappingURL=lib_index_js.354b3ee8e2af94cb3ca4.js.map
+//# sourceMappingURL=lib_index_js.7467c77b4a0d312fc0ee.js.map

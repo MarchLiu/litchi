@@ -124,7 +124,7 @@ __webpack_require__.d(exports, {
 /******/ 		// This function allow to reference async chunks
 /******/ 		__webpack_require__.u = (chunkId) => {
 /******/ 			// return url for filenames based on template
-/******/ 			return "" + chunkId + "." + {"lib_index_js":"354b3ee8e2af94cb3ca4","style_index_js":"b6d24b250239b04ec894"}[chunkId] + ".js";
+/******/ 			return "" + chunkId + "." + {"lib_index_js":"7467c77b4a0d312fc0ee","style_index_js":"d2061a2b67801f885a5d"}[chunkId] + ".js";
 /******/ 		};
 /******/ 	})();
 /******/ 	
@@ -243,7 +243,7 @@ __webpack_require__.d(exports, {
 /******/ 			var promises = [];
 /******/ 			switch(name) {
 /******/ 				case "default": {
-/******/ 					register("jupyter-litchi", "0.3.8", () => (__webpack_require__.e("lib_index_js").then(() => (() => (__webpack_require__(/*! ./lib/index.js */ "./lib/index.js"))))));
+/******/ 					register("jupyter-litchi", "0.4.0", () => (__webpack_require__.e("lib_index_js").then(() => (() => (__webpack_require__(/*! ./lib/index.js */ "./lib/index.js"))))));
 /******/ 				}
 /******/ 				break;
 /******/ 			}
@@ -562,4 +562,4 @@ __webpack_require__.d(exports, {
 /******/ 	
 /******/ })()
 ;
-//# sourceMappingURL=remoteEntry.7ce0991261d6542d065b.js.map
+//# sourceMappingURL=remoteEntry.677dbfaa6cac36bff0d7.js.map

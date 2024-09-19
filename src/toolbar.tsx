@@ -77,9 +77,13 @@ function ModelsComponent(props: {
   };
 
   return (
-    <span>
-      {'(*☻-☻*)'} <label htmlFor="model-select"> Select Model:</label>
-      <select id="model-select" value={selectedModel} onChange={handleChange}>
+    <div>
+      <label htmlFor="model-select"> Select Model:</label>
+      <select
+        id="model-select"
+        value={selectedModel}
+        onChange={handleChange}
+      >
         {models.map(model => (
           <option key={model} value={model}>
             {model}
@@ -98,7 +102,7 @@ function ModelsComponent(props: {
       <button disabled={processing} onClick={handleSelectedClick}>
         Selected
       </button>
-    </span>
+    </div>
   );
 }
 
@@ -151,7 +155,7 @@ export class WidgetExtension
     context: DocumentRegistry.IContext<INotebookModel>
   ): IDisposable {
     this.addClass('jp-litchi-toolbar');
-    panel.contentHeader.insertWidget(0, this);
+    panel.toolbar.addItem('litchi:model-list', this);
     return new DisposableDelegate(() => {
       this.dispose();
     });

@@ -426,7 +426,6 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/*
 */
 .jp-litchi-toolbar {
     min-height: 20px;
-    background-color: lightsalmon;
 }
 
 .jp-litchi-role-user-Cell .jp-InputPrompt {
@@ -435,7 +434,7 @@ ___CSS_LOADER_EXPORT___.push([module.id, `/*
 
 .jp-litchi-role-assistant-Cell .jp-InputPrompt {
     background-color: lightgoldenrodyellow;
-}`, "",{"version":3,"sources":["webpack://./style/base.css"],"names":[],"mappings":"AAAA;;;;CAIC;AACD;IACI,gBAAgB;IAChB,6BAA6B;AACjC;;AAEA;IACI,2BAA2B;AAC/B;;AAEA;IACI,sCAAsC;AAC1C","sourcesContent":["/*\n    See the JupyterLab Developer Guide for useful CSS Patterns:\n\n    https://jupyterlab.readthedocs.io/en/stable/developer/css.html\n*/\n.jp-litchi-toolbar {\n    min-height: 20px;\n    background-color: lightsalmon;\n}\n\n.jp-litchi-role-user-Cell .jp-InputPrompt {\n    background-color: lightcyan;\n}\n\n.jp-litchi-role-assistant-Cell .jp-InputPrompt {\n    background-color: lightgoldenrodyellow;\n}"],"sourceRoot":""}]);
+}`, "",{"version":3,"sources":["webpack://./style/base.css"],"names":[],"mappings":"AAAA;;;;CAIC;AACD;IACI,gBAAgB;AACpB;;AAEA;IACI,2BAA2B;AAC/B;;AAEA;IACI,sCAAsC;AAC1C","sourcesContent":["/*\n    See the JupyterLab Developer Guide for useful CSS Patterns:\n\n    https://jupyterlab.readthedocs.io/en/stable/developer/css.html\n*/\n.jp-litchi-toolbar {\n    min-height: 20px;\n}\n\n.jp-litchi-role-user-Cell .jp-InputPrompt {\n    background-color: lightcyan;\n}\n\n.jp-litchi-role-assistant-Cell .jp-InputPrompt {\n    background-color: lightgoldenrodyellow;\n}"],"sourceRoot":""}]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
@@ -497,4 +496,4 @@ var update = _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js
 /***/ })
 
 }]);
-//# sourceMappingURL=style_index_js.b6d24b250239b04ec894.js.map
+//# sourceMappingURL=style_index_js.d2061a2b67801f885a5d.js.map

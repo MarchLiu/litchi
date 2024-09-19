@@ -5,9 +5,5 @@
   "type": "object",
   "properties": {
   },
-  "additionalProperties": false,
-  "jupyter.lab.toolbars": {
-    "Litchi": [
-    ]
-  }
+  "additionalProperties": false
 }

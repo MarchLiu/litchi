@@ -2,20 +2,31 @@ import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
-import { ICommandPalette, IToolbarWidgetRegistry } from '@jupyterlab/apputils';
+import {
+  ICommandPalette,
+  IToolbarWidgetRegistry
+} from '@jupyterlab/apputils';
 import { IStateDB } from '@jupyterlab/statedb';
 import { chat, IMessage, Message } from './api';
 import { MarkdownCellModel } from '@jupyterlab/cells';
-import { INotebookTracker, Notebook,  } from '@jupyterlab/notebook';
+import {
+  INotebookTracker,
+  Notebook
+} from '@jupyterlab/notebook';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { WidgetExtension } from './toolbar';
 import { ICellModel } from '@jupyterlab/cells';
 import { Model } from './model';
 import { ITranslator } from '@jupyterlab/translation';
 
-import { LITCHI_ID, CommandIDs, LITCHI_MESSAGE_ROLE } from './constants';
-import { IFormRendererRegistry } from "@jupyterlab/ui-components";
-import { renderer } from "./settings";
+import {
+  LITCHI_ID,
+  CommandIDs,
+  LITCHI_MESSAGE_ROLE,
+} from './constants';
+import { IFormRendererRegistry } from '@jupyterlab/ui-components';
+import { renderer } from './settings';
+import { chIcon, csIcon, caIcon, ctIcon } from './icons';
 
 /**
  * The plugin registration information.
@@ -47,6 +58,7 @@ export async function activate(
   formRendererRegistry: IFormRendererRegistry | null
 ) {
   const model = new Model();
+
   const widget = new WidgetExtension(
     LITCHI_ID,
     app,
@@ -62,7 +74,8 @@ export async function activate(
     execute: async () => {
       await chatActivate(app, settingRegistry, tracker, model, state, 'chat');
     },
-    isEnabled: () => !model.processing
+    icon: caIcon,
+    isEnabled: () => model.idle
   });
   palette.addItem({ command: CommandIDs.CHAT, category: 'jupyter-Litchi' });
 
@@ -78,7 +91,8 @@ export async function activate(
         'contextual'
       );
     },
-    isEnabled: () => !model.processing
+    icon: ctIcon,
+    isEnabled: () => model.idle
   });
   palette.addItem({
     command: CommandIDs.CONTEXTUAL,
@@ -97,7 +111,8 @@ export async function activate(
         'historical'
       );
     },
-    isEnabled: () => !model.processing
+    icon: chIcon,
+    isEnabled: () => model.idle
   });
   palette.addItem({
     command: CommandIDs.HISTORICAL,
@@ -116,7 +131,8 @@ export async function activate(
         'selected'
       );
     },
-    isEnabled: () => !model.processing
+    icon: csIcon,
+    isEnabled: () => model.idle
   });
   palette.addItem({
     command: CommandIDs.SELECTED,
@@ -131,7 +147,8 @@ export async function activate(
     execute: async () => {
       model.showRoles = !model.showRoles;
     },
-    isToggled: () => model.showRoles
+    isToggled: () => model.showRoles,
+    isEnabled: () => !model.processing
   });
   palette.addItem({
     command: CommandIDs.TOGGLE_ROLE,

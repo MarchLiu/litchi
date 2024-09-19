@@ -31,31 +31,7 @@
     ]
   },
   "jupyter.lab.toolbars": {
-    "Litchi": [
-      {
-        "name": "litchi-chat",
-        "command": "litchi:chat",
-        "icon": "litchi-ca",
-        "rank": 1
-      },
-      {
-        "name": "litchi-contextual",
-        "command": "litchi:contextual",
-        "icon": "litchi-ct",
-        "rank": 1
-      },
-      {
-        "name": "litchi-historical",
-        "command": "litchi:historical",
-        "icon": "litchi-ch",
-        "rank": 1
-      },
-      {
-        "name": "litchi-selected",
-        "command": "litchi:selected",
-        "icon": "litchi-cs",
-        "rank": 1
-      }
+    "Notebook": [
     ]
   },
   "properties": {

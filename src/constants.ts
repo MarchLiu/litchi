@@ -7,4 +7,6 @@ export namespace CommandIDs {
   export const SELECTED = 'litchi:selected';
   export const TOGGLE_ROLE = 'litchi:show-roles-toggle';
 }
+
 export const LITCHI_MESSAGE_ROLE = 'litchi:message:role';
+export const LITCHI_TOOLBAR_FACTORY = 'litchi:toolbar-factory';
