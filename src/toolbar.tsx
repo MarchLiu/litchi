@@ -26,6 +26,7 @@ function ModelsComponent(props: {
   React.useEffect(() => {
     async function loadModels() {
       try {
+        console.log(`load settings from ${props.appId}`);
         const settings = await props.registry.load(props.appId);
         const baseUrl = settings.get('list-models').composite!.toString();
         const key = settings.get('key').composite?.toString();
@@ -83,6 +84,7 @@ function ModelsComponent(props: {
         id="model-select"
         value={selectedModel}
         onChange={handleChange}
+        disabled={processing}
       >
         {models.map(model => (
           <option key={model} value={model}>
@@ -155,7 +157,7 @@ export class WidgetExtension
     context: DocumentRegistry.IContext<INotebookModel>
   ): IDisposable {
     const widget = new WidgetExtension(
-      this.id,
+      this.appId,
       this.app,
       this.registry,
       this.state,

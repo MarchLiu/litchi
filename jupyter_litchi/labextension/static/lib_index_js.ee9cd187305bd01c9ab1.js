@@ -607,6 +607,7 @@ function ModelsComponent(props) {
         async function loadModels() {
             var _a;
             try {
+                console.log(`load settings from ${props.appId}`);
                 const settings = await props.registry.load(props.appId);
                 const baseUrl = settings.get('list-models').composite.toString();
                 const key = (_a = settings.get('key').composite) === null || _a === void 0 ? void 0 : _a.toString();
@@ -652,7 +653,7 @@ function ModelsComponent(props) {
     };
     return (react__WEBPACK_IMPORTED_MODULE_2__.createElement("div", null,
         react__WEBPACK_IMPORTED_MODULE_2__.createElement("label", { htmlFor: "model-select" }, " Select Model:"),
-        react__WEBPACK_IMPORTED_MODULE_2__.createElement("select", { id: "model-select", value: selectedModel, onChange: handleChange }, models.map(model => (react__WEBPACK_IMPORTED_MODULE_2__.createElement("option", { key: model, value: model }, model)))),
+        react__WEBPACK_IMPORTED_MODULE_2__.createElement("select", { id: "model-select", value: selectedModel, onChange: handleChange, disabled: processing }, models.map(model => (react__WEBPACK_IMPORTED_MODULE_2__.createElement("option", { key: model, value: model }, model)))),
         ' ',
         react__WEBPACK_IMPORTED_MODULE_2__.createElement("button", { disabled: processing, onClick: handleChatClick }, "Chat"),
         ' ',
@@ -682,7 +683,7 @@ class WidgetExtension extends _jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE
      * Create a new extension object.
      */
     createNew(panel, context) {
-        const widget = new WidgetExtension(this.id, this.app, this.registry, this.state, this.model);
+        const widget = new WidgetExtension(this.appId, this.app, this.registry, this.state, this.model);
         this.addClass('jp-litchi-toolbar');
         panel.toolbar.addItem('litchi:model-list', widget);
         return new _lumino_disposable__WEBPACK_IMPORTED_MODULE_0__.DisposableDelegate(() => {
@@ -695,4 +696,4 @@ class WidgetExtension extends _jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE
 /***/ })
 
 }]);
-//# sourceMappingURL=lib_index_js.e46d5073f6a7ab9b89d4.js.map
+//# sourceMappingURL=lib_index_js.ee9cd187305bd01c9ab1.js.map

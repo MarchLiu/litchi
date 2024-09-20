@@ -105,7 +105,7 @@
     "outputDir": "jupyter_litchi/labextension",
     "schemaDir": "schema",
     "_build": {
-      "load": "static/remoteEntry.1fcd70661429eed9173f.js",
+      "load": "static/remoteEntry.6f80984ee89cca4219f4.js",
       "extension": "./extension",
       "style": "./style"
     }
