@@ -1,6 +1,6 @@
 {
   "name": "jupyter-litchi",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "A JupyterLab extension.",
   "keywords": [
     "jupyter",
@@ -105,7 +105,7 @@
     "outputDir": "jupyter_litchi/labextension",
     "schemaDir": "schema",
     "_build": {
-      "load": "static/remoteEntry.6f80984ee89cca4219f4.js",
+      "load": "static/remoteEntry.e248f5e57e05674b64a7.js",
       "extension": "./extension",
       "style": "./style"
     }

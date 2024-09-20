@@ -3,7 +3,7 @@ import { IDisposable, DisposableDelegate } from '@lumino/disposable';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 
 import { NotebookPanel, INotebookModel } from '@jupyterlab/notebook';
-import { ReactWidget } from '@jupyterlab/ui-components';
+import { ReactWidget, ToolbarButtonComponent, Toolbar } from '@jupyterlab/ui-components';
 import * as React from 'react';
 import { IStateDB } from '@jupyterlab/statedb';
 import { JupyterFrontEnd } from '@jupyterlab/application';
@@ -11,6 +11,7 @@ import { JupyterFrontEnd } from '@jupyterlab/application';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { listModels } from './api';
 import { Model } from './model';
+import { caIcon, chIcon, csIcon, ctIcon } from "./icons";
 
 function ModelsComponent(props: {
   appId: string;
@@ -57,53 +58,73 @@ function ModelsComponent(props: {
     setSelectedModel(model);
   };
 
-  const handleChatClick = async (event: React.MouseEvent) => {
+  const handleChatClick = () => {
     const { commands } = props.app;
-    await commands.execute('litchi:chat');
+    commands.execute('litchi:chat');
   };
 
-  const handleContextualClick = async (event: React.MouseEvent) => {
+  const handleContextualClick = () => {
     const { commands } = props.app;
-    await commands.execute('litchi:contextual');
+    commands.execute('litchi:contextual');
   };
 
-  const handleHistoricalClick = async (event: React.MouseEvent) => {
+  const handleHistoricalClick = () => {
     const { commands } = props.app;
-    await commands.execute('litchi:historical');
+    commands.execute('litchi:historical');
   };
 
-  const handleSelectedClick = async (event: React.MouseEvent) => {
+  const handleSelectedClick = () => {
     const { commands } = props.app;
-    await commands.execute('litchi:selected');
+    commands.execute('litchi:selected');
   };
 
   return (
     <div>
-      <label htmlFor="model-select"> Select Model:</label>
-      <select
-        id="model-select"
-        value={selectedModel}
-        onChange={handleChange}
-        disabled={processing}
-      >
-        {models.map(model => (
-          <option key={model} value={model}>
-            {model}
-          </option>
-        ))}
-      </select>{' '}
-      <button disabled={processing} onClick={handleChatClick}>
-        Chat
-      </button>{' '}
-      <button disabled={processing} onClick={handleContextualClick}>
-        Contextual
-      </button>{' '}
-      <button disabled={processing} onClick={handleHistoricalClick}>
-        Historical
-      </button>{' '}
-      <button disabled={processing} onClick={handleSelectedClick}>
-        Selected
-      </button>
+      <ToolbarButtonComponent
+        icon={caIcon}
+        onClick={handleChatClick}
+        enabled={!processing}
+        tooltip="Chat"
+      ></ToolbarButtonComponent>
+      <ToolbarButtonComponent
+        icon={chIcon}
+        onClick={handleHistoricalClick}
+        enabled={!processing}
+        tooltip="Chat With Historical"
+      ></ToolbarButtonComponent>
+      <ToolbarButtonComponent
+        icon={ctIcon}
+        onClick={handleContextualClick}
+        enabled={!processing}
+        tooltip="Chat With Contextual"
+      ></ToolbarButtonComponent>
+      <ToolbarButtonComponent
+        icon={csIcon}
+        onClick={handleSelectedClick}
+        enabled={!processing}
+        tooltip="Chat With Selected"
+      ></ToolbarButtonComponent>
+      <span>
+        <label
+          htmlFor="model-select"
+          className="jp-ToolbarButtonComponent"
+        >
+          Select Model:{' '}
+        </label>
+        <select
+          id="model-select"
+          value={selectedModel}
+          onChange={handleChange}
+          disabled={processing}
+          className="jp-ToolbarButtonComponent"
+        >
+          {models.map(model => (
+            <option key={model} value={model}>
+              {model}
+            </option>
+          ))}
+        </select>
+      </span>
     </div>
   );
 }
@@ -163,7 +184,9 @@ export class WidgetExtension
       this.state,
       this.model
     );
+    widget.addClass('jp-DefaultStyle');
     this.addClass('jp-litchi-toolbar');
+    panel.toolbar.addItem('litchi:space', Toolbar.createSpacerItem());
     panel.toolbar.addItem('litchi:model-list', widget);
     return new DisposableDelegate(() => {
       this.dispose();

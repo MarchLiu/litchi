@@ -4,7 +4,13 @@
     https://jupyterlab.readthedocs.io/en/stable/developer/css.html
 */
 .jp-litchi-toolbar {
-    min-height: 20px;
+
+}
+
+.jp-litchi-toolbar span {
+    display: flex;
+    align-items: center;
+    padding-top: 10px;
 }
 
 .jp-litchi-role-user-Cell .jp-InputPrompt {
