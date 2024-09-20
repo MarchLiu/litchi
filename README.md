@@ -195,7 +195,7 @@ Settings page has been improved. Now we use textarea as system prompt editor.
 
 - Merge litchi toolbar into notebook toolbar
 - The problem what toolbar missed if new notebook created had been fixed
-- 
+- Uniformed the chat buttons as notebook toolbar style 
 
 ## About Me
 
