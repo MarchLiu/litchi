@@ -1,6 +1,7 @@
 // SendRequestComponent.tsx
+import { showErrorMessage, Dialog } from '@jupyterlab/apputils';
 
-import { ISettingRegistry } from "@jupyterlab/settingregistry";
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
 export interface IMessage {
   role: string;
@@ -62,6 +63,9 @@ export async function chat(
     }
   } catch (error) {
     console.error('Error sending request to server:', error);
+    throw new Error(
+      'chat failed, maybe server gone or get a invalid response. Please check settings or explorer console if you are a developer'
+    );
   }
   console.error('message not success');
   return { message: '', role: 'assistant' };
@@ -69,26 +73,37 @@ export async function chat(
 
 export async function listModels(url: string, key: string | undefined) {
   const headers = requestHeaders(key);
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: headers
-  });
-  return response
-    .json()
-    .then(data => {
-      if (data.models !== undefined) {
-        return data.models.map((m: { name: any }) => m.name);
-      } else if (data.data !== undefined) {
-        return data.data.map((m: { id: any }) => m.id);
-      } else {
-        console.error(`except data ${JSON.stringify(data, null, 2)}`);
-        return [];
-      }
-    })
-    .catch(e => {
-      console.error(e);
-      return [];
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: headers
     });
+    return response
+      .json()
+      .then(data => {
+        if (data.models !== undefined) {
+          return data.models.map((m: { name: any }) => m.name);
+        } else if (data.data !== undefined) {
+          return data.data.map((m: { id: any }) => m.id);
+        } else {
+          console.error(`except data ${JSON.stringify(data, null, 2)}`);
+          throw new Error(
+            `invalid models list from ${url}. Please check the settings or explorer console if you are the developer`
+          );
+        }
+      })
+      .catch(e => {
+        console.error(e);
+        throw new Error(
+          `list models from ${url} failed. Please check the settings or explorer console if you are the developer`
+        );
+      });
+  } catch (error) {
+    console.error(error);
+    throw new Error(
+      `list models from ${url} failed. Please check the settings or explorer console if you are the developer`
+    );
+  }
 }
 
 function requestHeaders(key: string | undefined) {
@@ -100,4 +115,8 @@ function requestHeaders(key: string | undefined) {
     headers.set('Authorization', key);
   }
   return headers;
+}
+
+export async function alert(message: string) {
+  return showErrorMessage('Litchi', message, [Dialog.okButton()]);
 }

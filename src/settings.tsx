@@ -8,7 +8,6 @@ import type { FieldProps } from '@rjsf/utils';
 import React, { useState } from 'react';
 import { LITCHI_ID } from './constants';
 
-
 export function renderer(
   settingRegistry: ISettingRegistry,
   formRegistry: IFormRendererRegistry
@@ -19,6 +18,7 @@ export function renderer(
     }
   };
   formRegistry.addRenderer(`${LITCHI_ID}.system`, renderer);
+  console.log(`${LITCHI_ID}.system rendered`);
 }
 
 /**
@@ -36,13 +36,14 @@ export function renderAvailableProviders(props: FieldProps) {
     const value = e.target.value;
     settings.set('system', value).catch(console.error);
     setSystem(value);
+    console.log(`setting of system prompt set as ${value}`);
   };
   return (
     <div>
       <fieldset>
         <legend>{title}</legend>
         <p className="field-description">{desc}</p>
-        <div key="system" className="form-group small-field">
+        <div key="system" className="form-group large-field">
           <div>
             <h3> {desc} </h3>
             <div className="inputFieldWrapper">

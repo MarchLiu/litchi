@@ -197,6 +197,10 @@ Settings page has been improved. Now we use textarea as system prompt editor.
 - The problem what toolbar missed if new notebook created had been fixed
 - Uniformed the chat buttons as notebook toolbar style 
 
+### 0.4.2
+
+Throw a alert dialog if the communication failed.
+
 ## About Me
 
 My name is Liu Xin, and my English name is Mars Liu and previously used March Liu. I translated the Python

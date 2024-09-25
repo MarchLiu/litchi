@@ -9,9 +9,9 @@ import { IStateDB } from '@jupyterlab/statedb';
 import { JupyterFrontEnd } from '@jupyterlab/application';
 
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
-import { listModels } from './api';
+import { alert, listModels } from './api';
 import { Model } from './model';
-import { caIcon, chIcon, csIcon, ctIcon } from "./icons";
+import { caIcon, chIcon, csIcon, ctIcon } from './icons';
 
 function ModelsComponent(props: {
   appId: string;
@@ -27,11 +27,10 @@ function ModelsComponent(props: {
   React.useEffect(() => {
     async function loadModels() {
       try {
-        console.log(`load settings from ${props.appId}`);
         const settings = await props.registry.load(props.appId);
         const baseUrl = settings.get('list-models').composite!.toString();
         const key = settings.get('key').composite?.toString();
-        const modelList = await listModels(baseUrl, key).catch(console.error);
+        const modelList = await listModels(baseUrl, key).catch(alert);
         setModels(modelList);
         if (modelList.length > 0) {
           setSelectedModel(modelList[0]);

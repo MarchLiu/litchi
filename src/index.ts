@@ -7,7 +7,7 @@ import {
   IToolbarWidgetRegistry
 } from '@jupyterlab/apputils';
 import { IStateDB } from '@jupyterlab/statedb';
-import { chat, IMessage, Message } from './api';
+import { alert, chat, IMessage, Message } from "./api";
 import { MarkdownCellModel } from '@jupyterlab/cells';
 import {
   INotebookTracker,
@@ -19,11 +19,7 @@ import { ICellModel } from '@jupyterlab/cells';
 import { Model } from './model';
 import { ITranslator } from '@jupyterlab/translation';
 
-import {
-  LITCHI_ID,
-  CommandIDs,
-  LITCHI_MESSAGE_ROLE,
-} from './constants';
+import { LITCHI_ID, CommandIDs, LITCHI_MESSAGE_ROLE } from './constants';
 import { IFormRendererRegistry } from '@jupyterlab/ui-components';
 import { renderer } from './settings';
 import { chIcon, csIcon, caIcon, ctIcon } from './icons';
@@ -193,14 +189,16 @@ async function chatActivate(
     const content = cell.model.sharedModel.source;
     // eslint-disable-next-line eqeqeq
     if (content === null) {
-      console.error('litchi:chat exit because the content of cell is null');
+      const message = 'litchi:chat exit because the content of cell is null'
+      alert(message);
       return;
     }
     const latest = cellToMessage(cell.model);
 
     const aiModel = (await state.fetch('litchi:model'))?.toString();
     if (aiModel === null || aiModel === undefined) {
-      console.error('litchi:chat exit because not any model selected');
+      const message = 'litchi:chat exit because not any model selected';
+      alert(message);
       return;
     }
 
@@ -213,11 +211,19 @@ async function chatActivate(
     const url = settings.get('chat')!.composite!.toString();
     const key = settings.get('key')?.composite?.toString();
 
-    const message = await chat(url, key, session, latest, aiModel!);
-    if (message.content && message.content.length > 0) {
+    const message = await chat(url, key, session, latest, aiModel!).catch(
+      alert
+    );
+    if (message.content !== undefined && message.content.length > 0) {
       const cellModel = new MarkdownCellModel();
       cellModel.sharedModel.setSource(message.content);
       cellModel.sharedModel.setMetadata(LITCHI_MESSAGE_ROLE, message.role);
+    } else {
+      console.error(`get a invalid message ${message}`);
+      alert(
+        'Message is invalid. Please check the settings and the model selected. Or check the explorer console if you are a developer.'
+      );
+      return;
     }
 
     const { commands } = app;
