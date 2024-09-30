@@ -6,6 +6,8 @@ export namespace CommandIDs {
   export const HISTORICAL = 'litchi:historical';
   export const SELECTED = 'litchi:selected';
   export const TOGGLE_ROLE = 'litchi:show-roles-toggle';
+  export const TRANSLATE = 'litchi:translate';
+  export const UNIT_TEST = 'litchi:unit-test';
 }
 
 export const LITCHI_MESSAGE_ROLE = 'litchi:message:role';

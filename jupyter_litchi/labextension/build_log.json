@@ -700,7 +700,7 @@
               "singleton": true
             },
             "jupyter-litchi": {
-              "version": "0.4.2",
+              "version": "0.4.3",
               "singleton": true,
               "import": "/Users/mars/jobs/litchi/lib/index.js"
             }

@@ -132,6 +132,8 @@ var CommandIDs;
     CommandIDs.HISTORICAL = 'litchi:historical';
     CommandIDs.SELECTED = 'litchi:selected';
     CommandIDs.TOGGLE_ROLE = 'litchi:show-roles-toggle';
+    CommandIDs.TRANSLATE = 'litchi:translate';
+    CommandIDs.UNIT_TEST = 'litchi:unit-test';
 })(CommandIDs || (CommandIDs = {}));
 const LITCHI_MESSAGE_ROLE = 'litchi:message:role';
 const LITCHI_TOOLBAR_FACTORY = 'litchi:toolbar-factory';
@@ -151,7 +153,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   chIcon: () => (/* binding */ chIcon),
 /* harmony export */   csIcon: () => (/* binding */ csIcon),
 /* harmony export */   ctIcon: () => (/* binding */ ctIcon),
-/* harmony export */   litchiIcon: () => (/* binding */ litchiIcon)
+/* harmony export */   langIcon: () => (/* binding */ langIcon),
+/* harmony export */   litchiIcon: () => (/* binding */ litchiIcon),
+/* harmony export */   unitTestIcon: () => (/* binding */ unitTestIcon)
 /* harmony export */ });
 /* harmony import */ var _jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @jupyterlab/ui-components */ "webpack/sharing/consume/default/@jupyterlab/ui-components");
 /* harmony import */ var _jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_0__);
@@ -192,6 +196,39 @@ const ctIcon = new _jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_0__.LabIco
         '    <text x="0" y="10" font-family="Arial" font-size="10" fill="black">CT</text>\n' +
         '</svg>'
 });
+function capitalizeFirstLetter(input) {
+    if (input.length === 0) {
+        return input;
+    }
+    if (input.length === 1) {
+        return input.charAt(0).toUpperCase();
+    }
+    return input.charAt(0).toUpperCase() + input.slice(1).toLowerCase();
+}
+function getLanguageAbbreviation(countryName) {
+    const countryAbbreviations = {
+        Chinese: 'Ch',
+        English: 'En',
+        French: 'Fr',
+        German: 'De'
+    };
+    return (countryAbbreviations[countryName] || capitalizeFirstLetter(countryName));
+}
+const langIcon = (lang) => {
+    const name = getLanguageAbbreviation(lang);
+    return new _jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_0__.LabIcon({
+        name: `litchi-${name}`,
+        svgstr: '<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">\n' +
+            `    <text x="0" y="10" font-family="Arial" font-size="10" fill="black">${name}</text>\n` +
+            '</svg>'
+    });
+};
+const unitTestIcon = new _jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_0__.LabIcon({
+    name: 'litchi-unit-test',
+    svgstr: '<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">\n' +
+        '    <text x="0" y="10" font-family="Arial" font-size="10" fill="black">UT</text>\n' +
+        '</svg>'
+});
 
 
 /***/ }),
@@ -225,8 +262,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _constants__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./constants */ "./lib/constants.js");
 /* harmony import */ var _jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @jupyterlab/ui-components */ "webpack/sharing/consume/default/@jupyterlab/ui-components");
 /* harmony import */ var _jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(_jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_6__);
-/* harmony import */ var _settings__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./settings */ "./lib/settings.js");
+/* harmony import */ var _settings__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./settings */ "./lib/settings.js");
 /* harmony import */ var _icons__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./icons */ "./lib/icons.js");
+/* harmony import */ var _templates__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./templates */ "./lib/templates.js");
+
 
 
 
@@ -307,6 +346,67 @@ async function activate(app, palette, tracker, settingRegistry, toolbarRegistry,
         command: _constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.SELECTED,
         category: 'jupyter-Litchi'
     });
+    const default_languages = ['Chinese', 'English'];
+    const trans = async (args) => {
+        const language = args.language.toString();
+        const t = (0,_templates__WEBPACK_IMPORTED_MODULE_11__.translate)(language);
+        await t(app, tracker, settingRegistry, model, state, language)
+            .catch(_api__WEBPACK_IMPORTED_MODULE_12__.alert)
+            .finally(() => {
+            model.processing = false;
+        });
+    };
+    app.commands.addCommand(_constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.TRANSLATE, {
+        label: args => `Litchi Translate To ${args.language}`,
+        icon: args => { var _a; return (0,_icons__WEBPACK_IMPORTED_MODULE_10__.langIcon)(((_a = args.language) === null || _a === void 0 ? void 0 : _a.toString()) || 'Unknown'); },
+        execute: async (args) => trans(args),
+        isEnabled: () => !model.processing,
+        isVisible: () => {
+            var _a;
+            const doctype = (_a = tracker.activeCell) === null || _a === void 0 ? void 0 : _a.model.type;
+            return doctype === 'markdown' || doctype === 'raw';
+        }
+    });
+    palette.addItem({
+        command: _constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.TRANSLATE,
+        category: 'jupyter-Litchi',
+        args: { language: 'English' }
+    });
+    palette.addItem({
+        command: _constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.TRANSLATE,
+        category: 'jupyter-Litchi',
+        args: { language: 'Chinese' }
+    });
+    app.commands.addCommand(_constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.UNIT_TEST, {
+        label: args => 'Litchi Create Unit Test',
+        icon: _icons__WEBPACK_IMPORTED_MODULE_10__.unitTestIcon,
+        execute: async (args) => {
+            var _a;
+            const cell = tracker.activeCell;
+            if (cell.model.type !== 'code') {
+                const message = 'Unit Test only for Code Cell';
+                console.error(message);
+                throw new Error(message);
+            }
+            let lang = 'Python';
+            const mimeType = (_a = cell.editor) === null || _a === void 0 ? void 0 : _a.model.mimeType;
+            if (mimeType) {
+                lang = langInMime(mimeType);
+            }
+            const func = (0,_templates__WEBPACK_IMPORTED_MODULE_11__.unitTest)(lang);
+            await func(app, tracker, settingRegistry, model, state, lang).finally(() => (model.processing = false));
+        },
+        isEnabled: () => !model.processing,
+        isVisible: () => {
+            var _a;
+            const doctype = (_a = tracker.activeCell) === null || _a === void 0 ? void 0 : _a.model.type;
+            return doctype === 'code';
+        }
+    });
+    palette.addItem({
+        command: _constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.UNIT_TEST,
+        category: 'jupyter-Litchi'
+    });
     model.stateChanged.connect(w => {
         refreshPage(tracker, w.showRoles);
     });
@@ -324,8 +424,21 @@ async function activate(app, palette, tracker, settingRegistry, toolbarRegistry,
     });
     app.restored.then(() => {
         if (formRendererRegistry) {
-            (0,_settings__WEBPACK_IMPORTED_MODULE_11__.renderer)(settingRegistry, formRendererRegistry);
+            (0,_settings__WEBPACK_IMPORTED_MODULE_13__.renderer)(settingRegistry, formRendererRegistry);
         }
+        settingRegistry.get(_constants__WEBPACK_IMPORTED_MODULE_7__.LITCHI_ID, 'translators').then(trans => {
+            const items = trans.composite || [];
+            for (const idx in items) {
+                const lang = items[idx].toString();
+                if (!default_languages.includes(lang)) {
+                    palette.addItem({
+                        command: _constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.TRANSLATE,
+                        category: 'jupyter-Litchi',
+                        args: { language: lang }
+                    });
+                }
+            }
+        });
     });
 }
 async function chatActivate(app, registry, tracker, model, state, subTask) {
@@ -495,6 +608,15 @@ async function refreshPage(tracker, showRoles) {
  * Export the plugin as default.
  */
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (plugin);
+function langInMime(mime) {
+    const token = mime.replace('text/x-', '');
+    switch (token) {
+        case 'ipython':
+            return 'python';
+        default:
+            return token;
+    }
+}
 
 
 /***/ }),
@@ -566,7 +688,6 @@ function renderer(settingRegistry, formRegistry) {
         }
     };
     formRegistry.addRenderer(`${_constants__WEBPACK_IMPORTED_MODULE_1__.LITCHI_ID}.system`, renderer);
-    console.log(`${_constants__WEBPACK_IMPORTED_MODULE_1__.LITCHI_ID}.system rendered`);
 }
 /**
  * Custom setting renderer.
@@ -582,7 +703,6 @@ function renderAvailableProviders(props) {
         const value = e.target.value;
         settings.set('system', value).catch(console.error);
         setSystem(value);
-        console.log(`setting of system prompt set as ${value}`);
     };
     return (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null,
         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("fieldset", null,
@@ -596,6 +716,97 @@ function renderAvailableProviders(props) {
                         " "),
                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "inputFieldWrapper" },
                         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("textarea", { className: "form-control", value: system, onChange: onSettingChange })))))));
+}
+
+
+/***/ }),
+
+/***/ "./lib/templates.js":
+/*!**************************!*\
+  !*** ./lib/templates.js ***!
+  \**************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   chat_by_cell: () => (/* binding */ chat_by_cell),
+/* harmony export */   translate: () => (/* binding */ translate),
+/* harmony export */   unitTest: () => (/* binding */ unitTest)
+/* harmony export */ });
+/* harmony import */ var _api__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./api */ "./lib/api.js");
+/* harmony import */ var _constants__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./constants */ "./lib/constants.js");
+/* harmony import */ var _jupyterlab_cells__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @jupyterlab/cells */ "webpack/sharing/consume/default/@jupyterlab/cells");
+/* harmony import */ var _jupyterlab_cells__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_jupyterlab_cells__WEBPACK_IMPORTED_MODULE_0__);
+
+
+
+function quote(text) {
+    return text.replace(/^('```')/g, '\\`\\`\\`');
+}
+function chat_by_cell(jobName, template, types) {
+    return async (app, tracker, registry, model, state, dest) => {
+        var _a, _b, _c, _d;
+        const notebook = (_a = tracker.currentWidget) === null || _a === void 0 ? void 0 : _a.content;
+        const source = notebook === null || notebook === void 0 ? void 0 : notebook.activeCell;
+        if (source === null) {
+            const message = 'Translate command need a markdown cell is selected';
+            console.error(message);
+            throw new Error(message);
+        }
+        if (!types.includes(source.model.type)) {
+            const message = `${jobName} command only support ${types} cell`;
+            console.error(message);
+            throw new Error(message);
+        }
+        const text = source.model.sharedModel.source;
+        const quoted = quote(text);
+        const prompt = template.replace('${text}', quoted);
+        const aiModel = (_b = (await state.fetch('litchi:model'))) === null || _b === void 0 ? void 0 : _b.toString();
+        if (aiModel === null || aiModel === undefined) {
+            const message = 'litchi:chat exit because not any model selected';
+            (0,_api__WEBPACK_IMPORTED_MODULE_1__.alert)(message);
+            return;
+        }
+        const settings = await registry.load(_constants__WEBPACK_IMPORTED_MODULE_2__.LITCHI_ID);
+        const session = [await _api__WEBPACK_IMPORTED_MODULE_1__.Message.startUp(settings)];
+        const request = new _api__WEBPACK_IMPORTED_MODULE_1__.Message('user', prompt);
+        const url = settings.get('chat').composite.toString();
+        const key = (_d = (_c = settings.get('key')) === null || _c === void 0 ? void 0 : _c.composite) === null || _d === void 0 ? void 0 : _d.toString();
+        model.processing = true;
+        const response = await (0,_api__WEBPACK_IMPORTED_MODULE_1__.chat)(url, key, session, request, aiModel).catch(_api__WEBPACK_IMPORTED_MODULE_1__.alert);
+        if (response.content !== undefined && response.content.length > 0) {
+            const cellModel = new _jupyterlab_cells__WEBPACK_IMPORTED_MODULE_0__.MarkdownCellModel();
+            cellModel.sharedModel.setSource(response.content);
+            cellModel.sharedModel.setMetadata(_constants__WEBPACK_IMPORTED_MODULE_2__.LITCHI_MESSAGE_ROLE, response.role);
+        }
+        else {
+            console.error(`get a invalid message ${response}`);
+            (0,_api__WEBPACK_IMPORTED_MODULE_1__.alert)('Message is invalid. Please check the settings and the model selected. Or check the explorer console if you are a developer.');
+            return;
+        }
+        const { commands } = app;
+        commands.execute('notebook:insert-cell-below').then(() => {
+            commands.execute('notebook:change-cell-to-markdown');
+        });
+        const newCell = notebook.activeCell;
+        const newModel = newCell.model.sharedModel;
+        newModel.setSource(response.content);
+        newModel.setMetadata(_constants__WEBPACK_IMPORTED_MODULE_2__.LITCHI_MESSAGE_ROLE, response.role);
+    };
+}
+function translate(lang) {
+    return chat_by_cell(`Translate To ${lang}`, `# Translate To ${lang}\n` +
+        `Translate text below to ${lang}\n` +
+        '```\n' +
+        '${text}\n' +
+        '```\n', ['markdown', 'raw']);
+}
+function unitTest(lang) {
+    return chat_by_cell('Unit Test', '# Create Unit Test\n' +
+        `Create ${lang} Unit Test for the code below to \n` +
+        '```\n' +
+        '${text}\n' +
+        '```\n', ['code']);
 }
 
 
@@ -721,4 +932,4 @@ class WidgetExtension extends _jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE
 /***/ })
 
 }]);
-//# sourceMappingURL=lib_index_js.70113c87f9a88b381513.js.map
+//# sourceMappingURL=lib_index_js.0183da1e6048a1089079.js.map

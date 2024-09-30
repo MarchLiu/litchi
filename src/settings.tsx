@@ -18,7 +18,6 @@ export function renderer(
     }
   };
   formRegistry.addRenderer(`${LITCHI_ID}.system`, renderer);
-  console.log(`${LITCHI_ID}.system rendered`);
 }
 
 /**
@@ -36,7 +35,6 @@ export function renderAvailableProviders(props: FieldProps) {
     const value = e.target.value;
     settings.set('system', value).catch(console.error);
     setSystem(value);
-    console.log(`setting of system prompt set as ${value}`);
   };
   return (
     <div>

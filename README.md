@@ -201,6 +201,12 @@ Settings page has been improved. Now we use textarea as system prompt editor.
 
 Throw a alert dialog if the communication failed.
 
+### 0.4.3
+
+- Add translate To English/Chinese command and cell button in markdown/raw cell. 
+- Support add more language translators in settings. They will be added into command palette.
+- Add Unit Test Command and the cell button in code cell 
+
 ## About Me
 
 My name is Liu Xin, and my English name is Mars Liu and previously used March Liu. I translated the Python

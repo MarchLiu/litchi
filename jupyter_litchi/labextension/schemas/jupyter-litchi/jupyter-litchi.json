@@ -24,6 +24,23 @@
             "type": "separator"
           },
           {
+            "command": "litchi:translate",
+            "args": {"language":  "English"}
+          },
+          {
+            "command": "litchi:translate",
+            "args": {"language":  "Chinese"}
+          },
+          {
+            "command": "litchi:show-roles-toggle"
+          },
+          {
+            "command": "litchi:unit-test"
+          },
+          {
+            "type": "separator"
+          },
+          {
             "command": "litchi:show-roles-toggle"
           }
         ]
@@ -32,6 +49,26 @@
   },
   "jupyter.lab.toolbars": {
     "Notebook": [
+    ],
+    "Cell": [
+      {
+        "name": "litchi-translate-chinese",
+        "command": "litchi:translate",
+        "args": {
+          "language": "Chinese"
+        }
+      },
+      {
+        "name": "litchi-translate-english",
+        "command": "litchi:translate",
+        "args": {
+          "language": "English"
+        }
+      },
+      {
+        "name": "litchi-unit-test",
+        "command": "litchi:unit-test"
+      }
     ]
   },
   "properties": {
@@ -58,6 +95,15 @@
       "title": "System Prompt:",
       "description": "System Prompt would insert into at first of chat messages list with system role.",
       "default": "your are a python and jupyter export"
+    },
+    "translators": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Translate Support:",
+      "description": "List the Languages all you need to a translate shortcut",
+      "default": []
     }
   },
   "additionalProperties": false,

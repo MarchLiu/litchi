@@ -2,17 +2,11 @@ import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
-import {
-  ICommandPalette,
-  IToolbarWidgetRegistry
-} from '@jupyterlab/apputils';
+import { ICommandPalette, IToolbarWidgetRegistry } from '@jupyterlab/apputils';
 import { IStateDB } from '@jupyterlab/statedb';
-import { alert, chat, IMessage, Message } from "./api";
+import { alert, chat, IMessage, Message } from './api';
 import { MarkdownCellModel } from '@jupyterlab/cells';
-import {
-  INotebookTracker,
-  Notebook
-} from '@jupyterlab/notebook';
+import { INotebookTracker, Notebook } from '@jupyterlab/notebook';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { WidgetExtension } from './toolbar';
 import { ICellModel } from '@jupyterlab/cells';
@@ -22,7 +16,9 @@ import { ITranslator } from '@jupyterlab/translation';
 import { LITCHI_ID, CommandIDs, LITCHI_MESSAGE_ROLE } from './constants';
 import { IFormRendererRegistry } from '@jupyterlab/ui-components';
 import { renderer } from './settings';
-import { chIcon, csIcon, caIcon, ctIcon } from './icons';
+import { chIcon, csIcon, caIcon, ctIcon, langIcon, unitTestIcon } from "./icons";
+import { translate, unitTest } from "./templates";
+import { ReadonlyPartialJSONArray } from '@lumino/coreutils';
 
 /**
  * The plugin registration information.
@@ -135,6 +131,71 @@ export async function activate(
     category: 'jupyter-Litchi'
   });
 
+  const default_languages: string[] = ['Chinese', 'English'];
+  const trans = async (args: any) => {
+    const language = args.language.toString();
+    const t = translate(language);
+    await t(app, tracker, settingRegistry, model, state, language)
+      .catch(alert)
+      .finally(() => {
+        model.processing = false;
+      });
+  };
+
+  app.commands.addCommand(CommandIDs.TRANSLATE, {
+    label: args => `Litchi Translate To ${args.language}`,
+    icon: args => langIcon(args.language?.toString() || 'Unknown'),
+    execute: async args => trans(args),
+    isEnabled: () => !model.processing,
+    isVisible: () => {
+      const doctype = tracker.activeCell?.model.type;
+      return doctype === 'markdown' || doctype === 'raw';
+    }
+  });
+
+  palette.addItem({
+    command: CommandIDs.TRANSLATE,
+    category: 'jupyter-Litchi',
+    args: { language: 'English' }
+  });
+
+  palette.addItem({
+    command: CommandIDs.TRANSLATE,
+    category: 'jupyter-Litchi',
+    args: { language: 'Chinese' }
+  });
+
+  app.commands.addCommand(CommandIDs.UNIT_TEST, {
+    label: args => 'Litchi Create Unit Test',
+    icon: unitTestIcon,
+    execute: async args => {
+      const cell = tracker.activeCell!;
+      if (cell.model.type !== 'code') {
+        const message = 'Unit Test only for Code Cell';
+        console.error(message);
+        throw new Error(message);
+      }
+      let lang = 'Python';
+      const mimeType = cell.editor?.model!.mimeType;
+      if (mimeType) {
+        lang = langInMime(mimeType);
+      }
+      const func = unitTest(lang);
+      await func(app, tracker, settingRegistry, model, state, lang).finally(
+        () => (model.processing = false)
+      );
+    },
+    isEnabled: () => !model.processing,
+    isVisible: () => {
+      const doctype = tracker.activeCell?.model.type;
+      return doctype === 'code';
+    }
+  });
+  palette.addItem({
+    command: CommandIDs.UNIT_TEST,
+    category: 'jupyter-Litchi'
+  });
+
   model.stateChanged.connect(w => {
     refreshPage(tracker, w.showRoles);
   });
@@ -155,6 +216,20 @@ export async function activate(
     if (formRendererRegistry) {
       renderer(settingRegistry, formRendererRegistry);
     }
+
+    settingRegistry.get(LITCHI_ID, 'translators').then(trans => {
+      const items = (trans.composite as ReadonlyPartialJSONArray) || [];
+      for (const idx in items) {
+        const lang = items[idx]!.toString();
+        if (!default_languages.includes(lang)) {
+          palette.addItem({
+            command: CommandIDs.TRANSLATE,
+            category: 'jupyter-Litchi',
+            args: { language: lang }
+          });
+        }
+      }
+    });
   });
 }
 
@@ -357,3 +432,13 @@ async function refreshPage(
  * Export the plugin as default.
  */
 export default plugin;
+
+function langInMime(mime: string) {
+  const token = mime.replace('text/x-', '');
+  switch (token) {
+    case 'ipython':
+      return 'python';
+    default:
+      return token;
+  }
+}

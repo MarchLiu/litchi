@@ -42,3 +42,45 @@ export const ctIcon = new LabIcon({
     '    <text x="0" y="10" font-family="Arial" font-size="10" fill="black">CT</text>\n' +
     '</svg>'
 });
+
+function capitalizeFirstLetter(input: string): string {
+  if (input.length === 0) {
+    return input;
+  }
+  if (input.length === 1) {
+    return input.charAt(0).toUpperCase();
+  }
+  return input.charAt(0).toUpperCase() + input.slice(1).toLowerCase();
+}
+
+function getLanguageAbbreviation(countryName: string): string {
+  const countryAbbreviations: { [key: string]: string } = {
+    Chinese: 'Ch',
+    English: 'En',
+    French: 'Fr',
+    German: 'De'
+  };
+
+  return (
+    countryAbbreviations[countryName] || capitalizeFirstLetter(countryName)
+  );
+}
+
+export const langIcon = (lang: string) => {
+  const name = getLanguageAbbreviation(lang);
+  return new LabIcon({
+    name: `litchi-${name}`,
+    svgstr:
+      '<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">\n' +
+      `    <text x="0" y="10" font-family="Arial" font-size="10" fill="black">${name}</text>\n` +
+      '</svg>'
+  });
+};
+
+export const unitTestIcon = new LabIcon({
+  name: 'litchi-unit-test',
+  svgstr:
+    '<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">\n' +
+    '    <text x="0" y="10" font-family="Arial" font-size="10" fill="black">UT</text>\n' +
+    '</svg>'
+});
