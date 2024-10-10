@@ -380,7 +380,14 @@ async function activate(app, palette, tracker, settingRegistry, toolbarRegistry,
             });
         },
         icon: _icons__WEBPACK_IMPORTED_MODULE_10__.litchiIcon,
-        isEnabled: () => model.idle
+        isEnabled: () => model.idle,
+        isVisible: () => {
+            const cell = tracker.activeCell;
+            if (cell === null) {
+                return false;
+            }
+            return cell.model.sharedModel.cell_type === 'markdown';
+        }
     });
     palette.addItem({
         command: _constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.CONTINUOUS,
@@ -1261,4 +1268,4 @@ class WidgetExtension extends _jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE
 /***/ })
 
 }]);
-//# sourceMappingURL=lib_index_js.ca153a7eac45c8af3c35.js.map
+//# sourceMappingURL=lib_index_js.d0e9f61fc41b63998951.js.map

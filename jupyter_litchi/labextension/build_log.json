@@ -703,7 +703,7 @@
             "regjsparser": {},
             "ts-jest": {},
             "jupyter-litchi": {
-              "version": "0.4.4",
+              "version": "0.4.5",
               "singleton": true,
               "import": "/Users/mars/jobs/litchi/lib/index.js"
             }

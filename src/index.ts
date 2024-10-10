@@ -152,7 +152,14 @@ export async function activate(
       });
     },
     icon: litchiIcon,
-    isEnabled: () => model.idle
+    isEnabled: () => model.idle,
+    isVisible: () => {
+      const cell = tracker.activeCell;
+      if (cell === null) {
+        return false;
+      }
+      return cell.model.sharedModel.cell_type === 'markdown';
+    }
   });
   palette.addItem({
     command: CommandIDs.CONTINUOUS,
