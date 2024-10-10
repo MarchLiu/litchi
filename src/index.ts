@@ -16,9 +16,10 @@ import { ITranslator } from '@jupyterlab/translation';
 import { LITCHI_ID, CommandIDs, LITCHI_MESSAGE_ROLE } from './constants';
 import { IFormRendererRegistry } from '@jupyterlab/ui-components';
 import { renderer } from './settings';
-import { chIcon, csIcon, caIcon, ctIcon, langIcon, unitTestIcon } from "./icons";
-import { translate, unitTest } from "./templates";
+import { chIcon, csIcon, caIcon, ctIcon, langIcon, unitTestIcon, litchiIcon, scIcon } from './icons';
+import { translate, unitTest } from './templates';
 import { ReadonlyPartialJSONArray } from '@lumino/coreutils';
+import { to_segments } from './markdown';
 
 /**
  * The plugin registration information.
@@ -49,7 +50,7 @@ export async function activate(
   state: IStateDB,
   formRendererRegistry: IFormRendererRegistry | null
 ) {
-  const model = new Model();
+  const model = new Model(settingRegistry);
 
   const widget = new WidgetExtension(
     LITCHI_ID,
@@ -131,6 +132,50 @@ export async function activate(
     category: 'jupyter-Litchi'
   });
 
+  app.commands.addCommand(CommandIDs.CONTINUOUS, {
+    label: 'Litchi Chat Continuous',
+    execute: async () => {
+      await chatActivate(
+        app,
+        settingRegistry,
+        tracker,
+        model,
+        state,
+        'historical'
+      ).then(() => {
+        // markup if not in continuous mode
+        if (!model.continuous) {
+          app.commands.execute('notebook:insert-cell-below').then(() => {
+            app.commands.execute('notebook:change-cell-to-markdown');
+          });
+        }
+      });
+    },
+    icon: litchiIcon,
+    isEnabled: () => model.idle
+  });
+  palette.addItem({
+    command: CommandIDs.CONTINUOUS,
+    category: 'jupyter-Litchi'
+  });
+
+  app.commands.addCommand(CommandIDs.SPLIT_CELL, {
+    label: 'Litchi Split Cell',
+    execute: async () => {
+      await splitCell(app, settingRegistry, tracker);
+    },
+    icon: scIcon,
+    isEnabled: () => model.idle,
+    isVisible: () => {
+      const current = tracker.activeCell;
+      return current?.model.sharedModel.cell_type === 'markdown';
+    }
+  });
+  palette.addItem({
+    command: CommandIDs.SPLIT_CELL,
+    category: 'jupyter-Litchi'
+  });
+
   const default_languages: string[] = ['Chinese', 'English'];
   const trans = async (args: any) => {
     const language = args.language.toString();
@@ -198,6 +243,15 @@ export async function activate(
 
   model.stateChanged.connect(w => {
     refreshPage(tracker, w.showRoles);
+    settingRegistry.get(LITCHI_ID, 'continuous-mode').then(continuous => {
+      if (continuous!.composite! !== model.continuous) {
+        settingRegistry
+          .set(LITCHI_ID, 'continuous-mode', model.continuous)
+          .then(() => {
+            console.log('Continuous mode changed.');
+          });
+      }
+    });
   });
   app.commands.addCommand(CommandIDs.TOGGLE_ROLE, {
     label: 'Litchi Show Roles Toggle',
@@ -211,10 +265,21 @@ export async function activate(
     command: CommandIDs.TOGGLE_ROLE,
     category: 'jupyter-Litchi'
   });
+  app.commands.addCommand(CommandIDs.TOGGLE_CONTINUOUS, {
+    label: 'Litchi Continuous Mode',
+    execute: async () => {
+      model.continuous = !model.continuous;
+    },
+    isToggled: () => model.continuous
+  });
+  palette.addItem({
+    command: CommandIDs.TOGGLE_CONTINUOUS,
+    category: 'jupyter-Litchi'
+  });
 
   app.restored.then(() => {
     if (formRendererRegistry) {
-      renderer(settingRegistry, formRendererRegistry);
+      renderer(settingRegistry, formRendererRegistry, translator);
     }
 
     settingRegistry.get(LITCHI_ID, 'translators').then(trans => {
@@ -294,6 +359,10 @@ async function chatActivate(
       cellModel.sharedModel.setSource(message.content);
       cellModel.sharedModel.setMetadata(LITCHI_MESSAGE_ROLE, message.role);
     } else {
+      if (message.content === '') {
+        console.log('ignored empty message');
+        return;
+      }
       console.error(`get a invalid message ${message}`);
       alert(
         'Message is invalid. Please check the settings and the model selected. Or check the explorer console if you are a developer.'
@@ -302,9 +371,18 @@ async function chatActivate(
     }
 
     const { commands } = app;
-    commands.execute('notebook:insert-cell-below').then(() => {
-      commands.execute('notebook:change-cell-to-markdown');
-    });
+    commands
+      .execute('notebook:insert-cell-below')
+      .then(() => {
+        commands.execute('notebook:change-cell-to-markdown');
+      })
+      .then(() => {
+        if (model.continuous) {
+          commands.execute('notebook:insert-cell-below').then(() => {
+            commands.execute('notebook:change-cell-to-markdown');
+          });
+        }
+      });
 
     const newCell = notebook.activeCell!;
     const newModel = newCell.model.sharedModel;
@@ -426,6 +504,35 @@ async function refreshPage(
       }
     }
   }
+}
+
+async function splitCell(
+  app: JupyterFrontEnd,
+  registry: ISettingRegistry,
+  tracker: INotebookTracker
+) {
+  const origin = tracker.activeCell;
+  if (origin === null) {
+    console.error('litchi:split-cell exit because any cell not been selected');
+    return;
+  }
+  const content = origin.model.sharedModel.source;
+  const segments = to_segments(content);
+  for (const idx in segments) {
+    const segment = segments[idx];
+    await app.commands.execute('notebook:insert-cell-below').then(() => {
+      if (segment.category === 'markdown') {
+        app.commands.execute('notebook:change-cell-to-markdown');
+      }
+    });
+    const cell = tracker.activeCell;
+    cell?.model.sharedModel.setSource(segment.content);
+    if (segment.category === 'code') {
+      cell?.model.sharedModel.setMetadata('language', segment.language);
+    }
+  }
+  origin.activate();
+  await app.commands.execute('notebook:delete-cell');
 }
 
 /**

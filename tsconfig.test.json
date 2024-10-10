@@ -1,6 +1,6 @@
 {
   "extends": "./tsconfig",
-  "include": ["./src/model.ts"],
+  "include": ["./src/model.ts", "./src/constants.ts", "./src/markdown.ts"],
   "compilerOptions": {
     "types": ["jest"]
   }

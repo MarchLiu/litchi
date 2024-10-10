@@ -19,5 +19,8 @@
     "strictNullChecks": true,
     "target": "ES2018"
   },
-  "include": ["src/*"]
+  "include": ["src/*", "tests"],
+  "paths": {
+    "@rjsf/*": ["node_modules/@rjsf/*"]
+  }
 }

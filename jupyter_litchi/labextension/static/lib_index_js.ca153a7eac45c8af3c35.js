@@ -40,12 +40,14 @@ async function chat(url, key, session, message, model) {
         const messages = [...session, message];
         const request = new ChatRequest(model, messages);
         const headers = requestHeaders(key);
+        console.log(request);
         const resp = await fetch(url, {
             method: 'POST',
             headers: headers,
             body: JSON.stringify(request)
         });
         const data = await resp.json();
+        console.log(data);
         if (data.message !== undefined) {
             return data.message;
         }
@@ -131,7 +133,10 @@ var CommandIDs;
     CommandIDs.CONTEXTUAL = 'litchi:contextual';
     CommandIDs.HISTORICAL = 'litchi:historical';
     CommandIDs.SELECTED = 'litchi:selected';
+    CommandIDs.CONTINUOUS = 'litchi:continuous';
     CommandIDs.TOGGLE_ROLE = 'litchi:show-roles-toggle';
+    CommandIDs.TOGGLE_CONTINUOUS = 'litchi:continuous-toggle';
+    CommandIDs.SPLIT_CELL = 'litchi:split-cell';
     CommandIDs.TRANSLATE = 'litchi:translate';
     CommandIDs.UNIT_TEST = 'litchi:unit-test';
 })(CommandIDs || (CommandIDs = {}));
@@ -150,11 +155,13 @@ const LITCHI_TOOLBAR_FACTORY = 'litchi:toolbar-factory';
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   caIcon: () => (/* binding */ caIcon),
+/* harmony export */   ccIcon: () => (/* binding */ ccIcon),
 /* harmony export */   chIcon: () => (/* binding */ chIcon),
 /* harmony export */   csIcon: () => (/* binding */ csIcon),
 /* harmony export */   ctIcon: () => (/* binding */ ctIcon),
 /* harmony export */   langIcon: () => (/* binding */ langIcon),
 /* harmony export */   litchiIcon: () => (/* binding */ litchiIcon),
+/* harmony export */   scIcon: () => (/* binding */ scIcon),
 /* harmony export */   unitTestIcon: () => (/* binding */ unitTestIcon)
 /* harmony export */ });
 /* harmony import */ var _jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @jupyterlab/ui-components */ "webpack/sharing/consume/default/@jupyterlab/ui-components");
@@ -194,6 +201,18 @@ const ctIcon = new _jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_0__.LabIco
     name: 'litchi-ct',
     svgstr: '<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">\n' +
         '    <text x="0" y="10" font-family="Arial" font-size="10" fill="black">CT</text>\n' +
+        '</svg>'
+});
+const ccIcon = new _jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_0__.LabIcon({
+    name: 'litchi-cc',
+    svgstr: '<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">\n' +
+        '    <text x="0" y="10" font-family="Arial" font-size="10" fill="black">CC</text>\n' +
+        '</svg>'
+});
+const scIcon = new _jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_0__.LabIcon({
+    name: 'litchi-sc',
+    svgstr: '<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">\n' +
+        '    <text x="0" y="10" font-family="Arial" font-size="10" fill="black">SC</text>\n' +
         '</svg>'
 });
 function capitalizeFirstLetter(input) {
@@ -265,6 +284,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _settings__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./settings */ "./lib/settings.js");
 /* harmony import */ var _icons__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./icons */ "./lib/icons.js");
 /* harmony import */ var _templates__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./templates */ "./lib/templates.js");
+/* harmony import */ var _markdown__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./markdown */ "./lib/markdown.js");
+
 
 
 
@@ -298,7 +319,7 @@ const plugin = {
     ]
 };
 async function activate(app, palette, tracker, settingRegistry, toolbarRegistry, translator, state, formRendererRegistry) {
-    const model = new _model__WEBPACK_IMPORTED_MODULE_8__.Model();
+    const model = new _model__WEBPACK_IMPORTED_MODULE_8__.Model(settingRegistry);
     const widget = new _toolbar__WEBPACK_IMPORTED_MODULE_9__.WidgetExtension(_constants__WEBPACK_IMPORTED_MODULE_7__.LITCHI_ID, app, settingRegistry, state, model);
     app.docRegistry.addWidgetExtension('Notebook', widget);
     app.commands.addCommand(_constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.CHAT, {
@@ -344,6 +365,41 @@ async function activate(app, palette, tracker, settingRegistry, toolbarRegistry,
     });
     palette.addItem({
         command: _constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.SELECTED,
+        category: 'jupyter-Litchi'
+    });
+    app.commands.addCommand(_constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.CONTINUOUS, {
+        label: 'Litchi Chat Continuous',
+        execute: async () => {
+            await chatActivate(app, settingRegistry, tracker, model, state, 'historical').then(() => {
+                // markup if not in continuous mode
+                if (!model.continuous) {
+                    app.commands.execute('notebook:insert-cell-below').then(() => {
+                        app.commands.execute('notebook:change-cell-to-markdown');
+                    });
+                }
+            });
+        },
+        icon: _icons__WEBPACK_IMPORTED_MODULE_10__.litchiIcon,
+        isEnabled: () => model.idle
+    });
+    palette.addItem({
+        command: _constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.CONTINUOUS,
+        category: 'jupyter-Litchi'
+    });
+    app.commands.addCommand(_constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.SPLIT_CELL, {
+        label: 'Litchi Split Cell',
+        execute: async () => {
+            await splitCell(app, settingRegistry, tracker);
+        },
+        icon: _icons__WEBPACK_IMPORTED_MODULE_10__.scIcon,
+        isEnabled: () => model.idle,
+        isVisible: () => {
+            const current = tracker.activeCell;
+            return (current === null || current === void 0 ? void 0 : current.model.sharedModel.cell_type) === 'markdown';
+        }
+    });
+    palette.addItem({
+        command: _constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.SPLIT_CELL,
         category: 'jupyter-Litchi'
     });
     const default_languages = ['Chinese', 'English'];
@@ -409,6 +465,15 @@ async function activate(app, palette, tracker, settingRegistry, toolbarRegistry,
     });
     model.stateChanged.connect(w => {
         refreshPage(tracker, w.showRoles);
+        settingRegistry.get(_constants__WEBPACK_IMPORTED_MODULE_7__.LITCHI_ID, 'continuous-mode').then(continuous => {
+            if (continuous.composite !== model.continuous) {
+                settingRegistry
+                    .set(_constants__WEBPACK_IMPORTED_MODULE_7__.LITCHI_ID, 'continuous-mode', model.continuous)
+                    .then(() => {
+                    console.log('Continuous mode changed.');
+                });
+            }
+        });
     });
     app.commands.addCommand(_constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.TOGGLE_ROLE, {
         label: 'Litchi Show Roles Toggle',
@@ -422,9 +487,20 @@ async function activate(app, palette, tracker, settingRegistry, toolbarRegistry,
         command: _constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.TOGGLE_ROLE,
         category: 'jupyter-Litchi'
     });
+    app.commands.addCommand(_constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.TOGGLE_CONTINUOUS, {
+        label: 'Litchi Continuous Mode',
+        execute: async () => {
+            model.continuous = !model.continuous;
+        },
+        isToggled: () => model.continuous
+    });
+    palette.addItem({
+        command: _constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.TOGGLE_CONTINUOUS,
+        category: 'jupyter-Litchi'
+    });
     app.restored.then(() => {
         if (formRendererRegistry) {
-            (0,_settings__WEBPACK_IMPORTED_MODULE_13__.renderer)(settingRegistry, formRendererRegistry);
+            (0,_settings__WEBPACK_IMPORTED_MODULE_13__.renderer)(settingRegistry, formRendererRegistry, translator);
         }
         settingRegistry.get(_constants__WEBPACK_IMPORTED_MODULE_7__.LITCHI_ID, 'translators').then(trans => {
             const items = trans.composite || [];
@@ -488,13 +564,26 @@ async function chatActivate(app, registry, tracker, model, state, subTask) {
             cellModel.sharedModel.setMetadata(_constants__WEBPACK_IMPORTED_MODULE_7__.LITCHI_MESSAGE_ROLE, message.role);
         }
         else {
+            if (message.content === '') {
+                console.log('ignored empty message');
+                return;
+            }
             console.error(`get a invalid message ${message}`);
             (0,_api__WEBPACK_IMPORTED_MODULE_12__.alert)('Message is invalid. Please check the settings and the model selected. Or check the explorer console if you are a developer.');
             return;
         }
         const { commands } = app;
-        commands.execute('notebook:insert-cell-below').then(() => {
+        commands
+            .execute('notebook:insert-cell-below')
+            .then(() => {
             commands.execute('notebook:change-cell-to-markdown');
+        })
+            .then(() => {
+            if (model.continuous) {
+                commands.execute('notebook:insert-cell-below').then(() => {
+                    commands.execute('notebook:change-cell-to-markdown');
+                });
+            }
         });
         const newCell = notebook.activeCell;
         const newModel = newCell.model.sharedModel;
@@ -604,6 +693,30 @@ async function refreshPage(tracker, showRoles) {
         }
     }
 }
+async function splitCell(app, registry, tracker) {
+    const origin = tracker.activeCell;
+    if (origin === null) {
+        console.error('litchi:split-cell exit because any cell not been selected');
+        return;
+    }
+    const content = origin.model.sharedModel.source;
+    const segments = (0,_markdown__WEBPACK_IMPORTED_MODULE_14__.to_segments)(content);
+    for (const idx in segments) {
+        const segment = segments[idx];
+        await app.commands.execute('notebook:insert-cell-below').then(() => {
+            if (segment.category === 'markdown') {
+                app.commands.execute('notebook:change-cell-to-markdown');
+            }
+        });
+        const cell = tracker.activeCell;
+        cell === null || cell === void 0 ? void 0 : cell.model.sharedModel.setSource(segment.content);
+        if (segment.category === 'code') {
+            cell === null || cell === void 0 ? void 0 : cell.model.sharedModel.setMetadata('language', segment.language);
+        }
+    }
+    origin.activate();
+    await app.commands.execute('notebook:delete-cell');
+}
 /**
  * Export the plugin as default.
  */
@@ -621,6 +734,145 @@ function langInMime(mime) {
 
 /***/ }),
 
+/***/ "./lib/markdown.js":
+/*!*************************!*\
+  !*** ./lib/markdown.js ***!
+  \*************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   to_segments: () => (/* binding */ to_segments)
+/* harmony export */ });
+class Fragment {
+    constructor(category, language) {
+        this._lines = [];
+        this._category = category;
+        this._language = language;
+    }
+    add(line) {
+        this._lines.push(line);
+    }
+    get category() {
+        return this._category;
+    }
+    get language() {
+        return this._language;
+    }
+    static createByHead(headline) {
+        if (headline.trim().startsWith('```')) {
+            return new Code(headline);
+        }
+        else {
+            return new Segment(headline);
+        }
+    }
+    get content() {
+        return this._lines.join('\n');
+    }
+}
+class Segment extends Fragment {
+    constructor(head) {
+        super('markdown', 'markdown');
+        this.inMermaid = false;
+        if (head !== undefined) {
+            this.add(head);
+        }
+    }
+    tryLine(l) {
+        const line = l.trim();
+        if (line.startsWith('```')) {
+            // in mermaid
+            if (line.startsWith('```mermaid') && !this.inMermaid) {
+                this.inMermaid = true;
+                this.add(line);
+                return 'markdown';
+            }
+            // out mermaid
+            if (line === '```' && this.inMermaid) {
+                this.inMermaid = false;
+                this.add(line);
+                return 'markdown';
+            }
+            // else redirect to code
+            return 'code';
+        }
+        else {
+            this.add(line);
+            return 'markdown';
+        }
+    }
+}
+class Code extends Fragment {
+    constructor(head) {
+        const language = head.substring(3);
+        super('code', language);
+        this.deep = 0;
+    }
+    tryLine(line) {
+        if (line.trim() === '```') {
+            // popup recursive code block stack
+            if (this.deep === 0) {
+                return 'end';
+            }
+            else {
+                this.deep -= 1;
+                this.add(line);
+                return 'code';
+            }
+        }
+        else {
+            this.add(line);
+            if (line.startsWith('```')) {
+                // push recursive code block stack
+                this.deep += 1;
+            }
+            return 'code';
+        }
+    }
+}
+class LitchiDocument {
+    get segments() {
+        return this._segments;
+    }
+    constructor() {
+        this._segments = [];
+    }
+    add(line) {
+        let latest;
+        if (this._segments.length === 0) {
+            latest = Fragment.createByHead(line);
+            this._segments.push(latest);
+        }
+        else {
+            latest = this._segments[this._segments.length - 1];
+            const tryIt = latest.tryLine(line);
+            if (tryIt !== latest.category) {
+                // skip try line
+                if (tryIt === 'end') {
+                    latest = new Segment(undefined);
+                    this._segments.push(latest);
+                }
+                else {
+                    latest = Fragment.createByHead(line);
+                    this._segments.push(latest);
+                }
+            }
+        }
+    }
+}
+function to_segments(markdown) {
+    const doc = new LitchiDocument();
+    const lines = markdown.split('\n');
+    for (const idx in lines) {
+        doc.add(lines[idx]);
+    }
+    return doc.segments;
+}
+
+
+/***/ }),
+
 /***/ "./lib/model.js":
 /*!**********************!*\
   !*** ./lib/model.js ***!
@@ -633,13 +885,19 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _jupyterlab_apputils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @jupyterlab/apputils */ "webpack/sharing/consume/default/@jupyterlab/apputils");
 /* harmony import */ var _jupyterlab_apputils__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_jupyterlab_apputils__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _constants__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./constants */ "./lib/constants.js");
+
 
 class Model extends _jupyterlab_apputils__WEBPACK_IMPORTED_MODULE_0__.VDomModel {
-    constructor() {
+    constructor(settingsRegistry) {
         super();
         this._showRoles = false;
         this._processing = false;
         this._idle = true;
+        settingsRegistry.load(_constants__WEBPACK_IMPORTED_MODULE_1__.LITCHI_ID).then(settings => {
+            this.continuous = settings.get('talking-mode').composite;
+        });
+        this._continuous = false;
     }
     get showRoles() {
         return this._showRoles;
@@ -649,6 +907,12 @@ class Model extends _jupyterlab_apputils__WEBPACK_IMPORTED_MODULE_0__.VDomModel 
             this._showRoles = v;
             this.stateChanged.emit();
         }
+    }
+    get continuous() {
+        return this._continuous;
+    }
+    set continuous(value) {
+        this._continuous = value;
     }
     get processing() {
         return this._processing;
@@ -673,7 +937,7 @@ class Model extends _jupyterlab_apputils__WEBPACK_IMPORTED_MODULE_0__.VDomModel 
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   renderAvailableProviders: () => (/* binding */ renderAvailableProviders),
+/* harmony export */   renderSystemPrompt: () => (/* binding */ renderSystemPrompt),
 /* harmony export */   renderer: () => (/* binding */ renderer)
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "webpack/sharing/consume/default/react");
@@ -681,18 +945,25 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _constants__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./constants */ "./lib/constants.js");
 
 
-function renderer(settingRegistry, formRegistry) {
-    const renderer = {
+// import validatorAjv8 from '@rjsf/validator-ajv8';
+function renderer(settingRegistry, formRegistry, translator) {
+    const systemPromptRenderer = {
         fieldRenderer: props => {
-            return renderAvailableProviders(props);
+            return renderSystemPrompt(props);
         }
     };
-    formRegistry.addRenderer(`${_constants__WEBPACK_IMPORTED_MODULE_1__.LITCHI_ID}.system`, renderer);
+    formRegistry.addRenderer(`${_constants__WEBPACK_IMPORTED_MODULE_1__.LITCHI_ID}.system`, systemPromptRenderer);
+    // const providersRenderer: IFormRenderer = {
+    //   fieldRenderer: props => {
+    //     return renderProviders(translator, props);
+    //   }
+    // };
+    // formRegistry.addRenderer(`${LITCHI_ID}.providers.[*]`, providersRenderer);
 }
 /**
- * Custom setting renderer.
+ * System Prompt renderer.
  */
-function renderAvailableProviders(props) {
+function renderSystemPrompt(props) {
     const { schema } = props;
     const title = schema.title;
     const desc = schema.description;
@@ -717,6 +988,63 @@ function renderAvailableProviders(props) {
                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "inputFieldWrapper" },
                         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("textarea", { className: "form-control", value: system, onChange: onSettingChange })))))));
 }
+/**
+ * Providers Settings renderer.
+ */
+// export function renderProviders(translator: ITranslator, props: FieldProps) {
+//   const registry = new EditorExtensionRegistry();
+//   const properties = React.useMemo(() => registry.settingsSchema, []) as any;
+//   const defaultFormData: Record<string, any> = {};
+//   console.log('init providers settings page');
+//   // Only provide customizable options
+//   for (const [key, value] of Object.entries(registry.defaultConfiguration)) {
+//     if (typeof properties[key] !== 'undefined') {
+//       console.log(`property "${key}" load as ${value}`);
+//       defaultFormData[key] = value;
+//     }
+//   }
+//
+//   return (
+//     <div className="jp-FormGroup-contentNormal">
+//       <h3 className="jp-FormGroup-fieldLabel jp-FormGroup-contentItem">
+//         {props.schema.title}
+//       </h3>
+//       {props.schema.description && (
+//         <div className="jp-FormGroup-description">
+//           This is a provider {props.schema.description}
+//         </div>
+//       )}
+//       <FormComponent
+//         schema={{
+//           title: props.schema.title,
+//           description: props.schema.description,
+//           type: 'object',
+//           properties,
+//           additionalProperties: false
+//         }}
+//         validator={validatorAjv8}
+//         formData={{ ...defaultFormData, ...props.formData }}
+//         formContext={{ defaultFormData }}
+//         liveValidate
+//         onChange={e => {
+//           // Only save non-default values
+//           console.log('provider settings changed');
+//           const nonDefault: Record<string, ReadonlyJSONValue> = {};
+//           for (const [property, value] of Object.entries(e.formData ?? {})) {
+//             console.log(`property "${property}" changed to ${value}`);
+//             alert(`property "${property}" changed to ${value}`);
+//             const default_ = defaultFormData[property];
+//             if (default_ === undefined || !JSONExt.deepEqual(value, default_)) {
+//               nonDefault[property] = value;
+//             }
+//           }
+//           props.onChange(nonDefault);
+//         }}
+//         tagName="div"
+//         translator={translator ?? nullTranslator} />
+//     </div>
+//   );
+// }
 
 
 /***/ }),
@@ -891,6 +1219,7 @@ function ModelsComponent(props) {
         react__WEBPACK_IMPORTED_MODULE_2__.createElement(_jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_1__.ToolbarButtonComponent, { icon: _icons__WEBPACK_IMPORTED_MODULE_4__.chIcon, onClick: handleHistoricalClick, enabled: !processing, tooltip: "Chat With Historical" }),
         react__WEBPACK_IMPORTED_MODULE_2__.createElement(_jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_1__.ToolbarButtonComponent, { icon: _icons__WEBPACK_IMPORTED_MODULE_4__.ctIcon, onClick: handleContextualClick, enabled: !processing, tooltip: "Chat With Contextual" }),
         react__WEBPACK_IMPORTED_MODULE_2__.createElement(_jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_1__.ToolbarButtonComponent, { icon: _icons__WEBPACK_IMPORTED_MODULE_4__.csIcon, onClick: handleSelectedClick, enabled: !processing, tooltip: "Chat With Selected" }),
+        react__WEBPACK_IMPORTED_MODULE_2__.createElement(_jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_1__.ToolbarButtonComponent, { icon: _icons__WEBPACK_IMPORTED_MODULE_4__.ccIcon, onClick: handleSelectedClick, enabled: !processing, tooltip: "Chat Continuous" }),
         react__WEBPACK_IMPORTED_MODULE_2__.createElement("span", null,
             react__WEBPACK_IMPORTED_MODULE_2__.createElement("label", { htmlFor: "model-select", className: "jp-ToolbarButtonComponent" },
                 "Select Model:",
@@ -932,4 +1261,4 @@ class WidgetExtension extends _jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE
 /***/ })
 
 }]);
-//# sourceMappingURL=lib_index_js.0183da1e6048a1089079.js.map
+//# sourceMappingURL=lib_index_js.ca153a7eac45c8af3c35.js.map

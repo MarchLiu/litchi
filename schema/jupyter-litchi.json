@@ -21,6 +21,9 @@
             "command": "litchi:selected"
           },
           {
+            "command": "litchi:continuous"
+          },
+          {
             "type": "separator"
           },
           {
@@ -42,6 +45,9 @@
           },
           {
             "command": "litchi:show-roles-toggle"
+          },
+          {
+            "command": "litchi:continuous-toggle"
           }
         ]
       }
@@ -51,6 +57,10 @@
     "Notebook": [
     ],
     "Cell": [
+      {
+        "name": "litchi-continuous",
+        "command": "litchi:continuous"
+      },
       {
         "name": "litchi-translate-chinese",
         "command": "litchi:translate",
@@ -68,6 +78,10 @@
       {
         "name": "litchi-unit-test",
         "command": "litchi:unit-test"
+      },
+      {
+        "name": "litchi-split-cell",
+        "command": "litchi:split-cell"
       }
     ]
   },
@@ -104,6 +118,106 @@
       "title": "Translate Support:",
       "description": "List the Languages all you need to a translate shortcut",
       "default": []
+    },
+    "continuous-mode": {
+      "type": "boolean",
+      "title": "Continuous Mode",
+      "description": "Auto generate a markdown cell below the response cell if continuous mode.",
+      "default": true
+    },
+    "providers": {
+      "type": "array",
+      "title": "API Providers:",
+      "description": "Settings for your AI service connections",
+      "items": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": ["OpenAI", "Ollama", "MoonShot","Custom"],
+            "default": "Ollama",
+            "title": "API Category: ",
+            "description": "Select a known Category or custom"
+          },
+          "name": {
+            "type": "string",
+            "title": "Provider Name: ",
+            "description": "Set the name for your provider"
+          },
+          "host": {
+            "type": "string",
+            "title": "Host: ",
+            "description": "Set the host for your provider",
+            "default": "http://localhost:11434"
+          },
+          "list": {
+            "type": "string",
+            "title": "List Models: ",
+            "description": "Set the API where your provider list models",
+            "default": "/api/tags"
+          },
+          "chat": {
+            "type": "string",
+            "title": "Chat: ",
+            "description": "Set the API where your provider chat with you",
+            "default": "/api/chat"
+          },
+          "headers": {
+            "type": "array",
+            "title": "Request Headers: ",
+            "description": "Set Http(s) Request Headers",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "title": "Header Name"
+                },
+                "value": {
+                  "type": "string",
+                  "title": "Header Value"
+                }
+              }
+            }
+          },
+          "query": {
+            "type": "array",
+            "title": "Query Parameters: ",
+            "description": "Set Http(s) Request Query Parameters. They will been add in request url",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "title": "Name"
+                },
+                "value": {
+                  "type": "string",
+                  "title": "Value"
+                }
+              }
+            }
+          },
+          "parameters": {
+            "type": "array",
+            "title": "Request Parameters: ",
+            "description": "Set Http(s) Request Extend Parameters. They will been add in request json body",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "title": "Name"
+                },
+                "value": {
+                  "type": "string",
+                  "title": "Value"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "additionalProperties": false,

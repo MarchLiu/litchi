@@ -43,6 +43,22 @@ export const ctIcon = new LabIcon({
     '</svg>'
 });
 
+export const ccIcon = new LabIcon({
+  name: 'litchi-cc',
+  svgstr:
+    '<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">\n' +
+    '    <text x="0" y="10" font-family="Arial" font-size="10" fill="black">CC</text>\n' +
+    '</svg>'
+});
+
+export const scIcon = new LabIcon({
+  name: 'litchi-sc',
+  svgstr:
+    '<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">\n' +
+    '    <text x="0" y="10" font-family="Arial" font-size="10" fill="black">SC</text>\n' +
+    '</svg>'
+});
+
 function capitalizeFirstLetter(input: string): string {
   if (input.length === 0) {
     return input;

@@ -207,6 +207,13 @@ Throw a alert dialog if the communication failed.
 - Support add more language translators in settings. They will be added into command palette.
 - Add Unit Test Command and the cell button in code cell 
 
+### 0.4.5
+
+- Add split cell command. The command split markdown cell content to markdown/mermaid and code cells. It is 
+  useful if the AI response mixed markdown text and code
+- Add continue mode. If continue mode is activated, add and active a new markdown cell below the AI response.
+- Add a cell toolbar button for continuous historical chat until current cell even if continuous mode is deactivated. 
+
 ## About Me
 
 My name is Liu Xin, and my English name is Mars Liu and previously used March Liu. I translated the Python

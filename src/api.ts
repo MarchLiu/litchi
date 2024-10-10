@@ -47,12 +47,14 @@ export async function chat(
     const request = new ChatRequest(model, messages);
     const headers = requestHeaders(key);
 
+    console.log(request);
     const resp = await fetch(url, {
       method: 'POST',
       headers: headers,
       body: JSON.stringify(request)
     });
     const data = await resp.json();
+    console.log(data);
     if (data.message !== undefined) {
       return data.message;
     } else if (data.choices !== undefined) {

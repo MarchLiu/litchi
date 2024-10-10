@@ -11,7 +11,7 @@ import { JupyterFrontEnd } from '@jupyterlab/application';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { alert, listModels } from './api';
 import { Model } from './model';
-import { caIcon, chIcon, csIcon, ctIcon } from './icons';
+import { caIcon, chIcon, ccIcon, csIcon, ctIcon } from "./icons";
 
 function ModelsComponent(props: {
   appId: string;
@@ -103,11 +103,14 @@ function ModelsComponent(props: {
         enabled={!processing}
         tooltip="Chat With Selected"
       ></ToolbarButtonComponent>
+      <ToolbarButtonComponent
+        icon={ccIcon}
+        onClick={handleSelectedClick}
+        enabled={!processing}
+        tooltip="Chat Continuous"
+      ></ToolbarButtonComponent>
       <span>
-        <label
-          htmlFor="model-select"
-          className="jp-ToolbarButtonComponent"
-        >
+        <label htmlFor="model-select" className="jp-ToolbarButtonComponent">
           Select Model:{' '}
         </label>
         <select
