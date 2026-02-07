@@ -700,6 +700,7 @@
               "singleton": true
             },
             "@rjsf/validator-ajv8": {},
+            "axios": {},
             "regjsparser": {},
             "ts-jest": {},
             "jupyter-litchi": {

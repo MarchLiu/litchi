@@ -2,24 +2,46 @@
 import { showErrorMessage, Dialog } from '@jupyterlab/apputils';
 
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
+import {
+  ReadonlyPartialJSONArray,
+  ReadonlyPartialJSONObject
+} from '@lumino/coreutils';
+import { IAuthKeyOption, IOllamaOption, IProvider, Message } from './commons';
+import { ollama } from './ollama';
+import { kimi } from './kimi';
+import { deepseek } from './deepseek';
 
-export interface IMessage {
-  role: string;
-  content: string;
+export function provider(settings: ISettingRegistry.ISettings) {
+  const providers = settings.get('providers').composite;
+  const name = settings.get('selected').composite;
+  if (!providers) {
+    throw new Error('Not any provider in settings');
+  }
+  if (!name) {
+    throw new Error('Not any provider has been selected');
+  }
+  for (const provider of providers! as ReadonlyPartialJSONArray) {
+    if (provider !== null) {
+      const p = provider as unknown as ReadonlyPartialJSONObject;
+      if (p.name === name) {
+        return createProvider(p);
+      }
+    }
+  }
+  throw new Error(`provider not found: ${name}`);
 }
 
-export class Message implements IMessage {
-  role: string;
-  content: string;
-
-  constructor(role: string, content: string) {
-    this.role = role;
-    this.content = content;
-  }
-
-  static async startUp(settings: ISettingRegistry.ISettings): Promise<Message> {
-    const system = settings.get('system').composite!.toString();
-    return new Message('system', system);
+function createProvider(settings: ReadonlyPartialJSONObject): IProvider {
+  const category = settings.category! as string;
+  switch (category) {
+    case 'ollama':
+      return ollama.createProvider(settings as unknown as IOllamaOption);
+    case 'kimi':
+      return kimi.createProvider(settings as unknown as IAuthKeyOption);
+    case 'deepseek':
+      return deepseek.createProvider(settings as unknown as IAuthKeyOption);
+    default:
+      throw new Error(`provider type unknown: ${category}`);
   }
 }
 
@@ -47,14 +69,12 @@ export async function chat(
     const request = new ChatRequest(model, messages);
     const headers = requestHeaders(key);
 
-    console.log(request);
     const resp = await fetch(url, {
       method: 'POST',
       headers: headers,
       body: JSON.stringify(request)
     });
     const data = await resp.json();
-    console.log(data);
     if (data.message !== undefined) {
       return data.message;
     } else if (data.choices !== undefined) {
@@ -80,6 +100,7 @@ export async function listModels(url: string, key: string | undefined) {
       method: 'GET',
       headers: headers
     });
+    console.log(headers);
     return response
       .json()
       .then(data => {
@@ -114,7 +135,7 @@ function requestHeaders(key: string | undefined) {
     Accept: 'application/json'
   });
   if (key !== undefined && key.length > 0) {
-    headers.set('Authorization', key);
+    headers.set('Authorization', `Bearer ${key}`);
   }
   return headers;
 }

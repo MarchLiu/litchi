@@ -3,7 +3,8 @@ import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { INotebookTracker } from '@jupyterlab/notebook';
 import { Model } from './model';
 import { IStateDB } from '@jupyterlab/statedb';
-import { alert, chat, IMessage, Message } from './api';
+import { alert, chat } from './api';
+import { IMessage, Message } from './commons'
 import { LITCHI_ID, LITCHI_MESSAGE_ROLE } from './constants';
 import { MarkdownCellModel } from '@jupyterlab/cells';
 

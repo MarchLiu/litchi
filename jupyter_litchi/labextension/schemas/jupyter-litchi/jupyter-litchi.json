@@ -28,11 +28,15 @@
           },
           {
             "command": "litchi:translate",
-            "args": {"language":  "English"}
+            "args": {
+              "language": "English"
+            }
           },
           {
             "command": "litchi:translate",
-            "args": {"language":  "Chinese"}
+            "args": {
+              "language": "Chinese"
+            }
           },
           {
             "type": "separator"
@@ -54,8 +58,7 @@
     ]
   },
   "jupyter.lab.toolbars": {
-    "Notebook": [
-    ],
+    "Notebook": [],
     "Cell": [
       {
         "name": "litchi-continuous",
@@ -108,7 +111,10 @@
       "type": "string",
       "title": "System Prompt:",
       "description": "System Prompt would insert into at first of chat messages list with system role.",
-      "default": "your are a python and jupyter export"
+      "default": "your are a python and jupyter export",
+      "ui-widget": {
+        "ui:widget": "textarea"
+      }
     },
     "translators": {
       "type": "array",
@@ -127,97 +133,107 @@
     },
     "providers": {
       "type": "array",
-      "title": "API Providers:",
-      "description": "Settings for your AI service connections",
+      "title": "AI Providers",
+      "description": "AI Service Supply Chat service.",
       "items": {
         "type": "object",
-        "properties": {
-          "category": {
-            "type": "string",
-            "enum": ["OpenAI", "Ollama", "MoonShot","Custom"],
-            "default": "Ollama",
-            "title": "API Category: ",
-            "description": "Select a known Category or custom"
-          },
-          "name": {
-            "type": "string",
-            "title": "Provider Name: ",
-            "description": "Set the name for your provider"
-          },
-          "host": {
-            "type": "string",
-            "title": "Host: ",
-            "description": "Set the host for your provider",
-            "default": "http://localhost:11434"
-          },
-          "list": {
-            "type": "string",
-            "title": "List Models: ",
-            "description": "Set the API where your provider list models",
-            "default": "/api/tags"
-          },
-          "chat": {
-            "type": "string",
-            "title": "Chat: ",
-            "description": "Set the API where your provider chat with you",
-            "default": "/api/chat"
-          },
-          "headers": {
-            "type": "array",
-            "title": "Request Headers: ",
-            "description": "Set Http(s) Request Headers",
-            "items": {
-              "type": "object",
-              "properties": {
-                "name": {
-                  "type": "string",
-                  "title": "Header Name"
-                },
-                "value": {
-                  "type": "string",
-                  "title": "Header Value"
-                }
+        "anyOf": [
+          {
+            "title": "Ollama",
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "title": "Provider Name",
+                "description": "Set a Name will easy to remember if You have many ollama instances"
+              },
+              "baseUrl": {
+                "type": "string",
+                "title": "Base Url",
+                "default": "http://localhost:11434"
+              },
+              "category": {
+                "type": "string",
+                "value": "ollama"
               }
             }
           },
-          "query": {
-            "type": "array",
-            "title": "Query Parameters: ",
-            "description": "Set Http(s) Request Query Parameters. They will been add in request url",
-            "items": {
-              "type": "object",
-              "properties": {
-                "name": {
-                  "type": "string",
-                  "title": "Name"
-                },
-                "value": {
-                  "type": "string",
-                  "title": "Value"
-                }
+          {
+            "title": "OpenAI",
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "title": "Provider Name",
+                "description": "Set a Name will easy to remember if You have many OpenAI Logins"
+              },
+              "authKey": {
+                "type": "string",
+                "title": "Authorization Key"
+              },
+              "category": {
+                "type": "string",
+                "value": "openai"
               }
             }
           },
-          "parameters": {
-            "type": "array",
-            "title": "Request Parameters: ",
-            "description": "Set Http(s) Request Extend Parameters. They will been add in request json body",
-            "items": {
-              "type": "object",
-              "properties": {
-                "name": {
-                  "type": "string",
-                  "title": "Name"
-                },
-                "value": {
-                  "type": "string",
-                  "title": "Value"
-                }
+          {
+            "title": "KIMI",
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "title": "Provider Name",
+                "description": "Set a Name will easy to remember if You have many Kimi Logins",
+                "default": "KIMI"
+              },
+              "authKey": {
+                "type": "string",
+                "title": "Authorization Key"
+              },
+              "category": {
+                "type": "string",
+                "value": "kimi",
+                "readonly": true
+              }
+            }
+          },
+          {
+            "title": "DeepSeek",
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "title": "Provider Name",
+                "description": "Set a Name will easy to remember if You have many DeepSeek Logins",
+                "default": "DeepSeek"
+              },
+              "authKey": {
+                "type": "string",
+                "title": "Authorization Key"
+              },
+              "category": {
+                "type": "string",
+                "value": "deepseek",
+                "readonly": true
               }
             }
           }
+        ]
+      },
+      "default": [
+        {
+          "name": "Ollama",
+          "baseUrl": "http://127.0.0.1:11434",
+          "category": "ollama"
         }
-      }
+      ]
+    },
+    "selected": {
+      "type": "string",
+      "title": "Select Provider",
+      "description": "The AI Provider used for chat",
+      "default": "Ollama"
     }
   },
   "additionalProperties": false,

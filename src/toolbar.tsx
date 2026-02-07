@@ -9,9 +9,9 @@ import { IStateDB } from '@jupyterlab/statedb';
 import { JupyterFrontEnd } from '@jupyterlab/application';
 
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
-import { alert, listModels } from './api';
+import { listModels } from './api';
 import { Model } from './model';
-import { caIcon, chIcon, ccIcon, csIcon, ctIcon } from "./icons";
+import { caIcon, chIcon, ccIcon, csIcon, ctIcon } from './icons';
 
 function ModelsComponent(props: {
   appId: string;
@@ -22,15 +22,18 @@ function ModelsComponent(props: {
 }) {
   const [models, setModels] = React.useState<string[]>([]);
   const [selectedModel, setSelectedModel] = React.useState<string>('');
-  const [processing, setProcessing] = React.useState(props.model.processing);
+  const [enabled, setEnabled] = React.useState(props.model.processing);
 
   React.useEffect(() => {
     async function loadModels() {
       try {
         const settings = await props.registry.load(props.appId);
+        // const pvd = provider(settings);
+        // const modelList = await pvd.listModels();
         const baseUrl = settings.get('list-models').composite!.toString();
         const key = settings.get('key').composite?.toString();
         const modelList = await listModels(baseUrl, key).catch(alert);
+
         setModels(modelList);
         if (modelList.length > 0) {
           setSelectedModel(modelList[0]);
@@ -47,14 +50,14 @@ function ModelsComponent(props: {
   React.useEffect(() => {
     const stateChanged = props.model.stateChanged;
     stateChanged.connect((m, args) => {
-      setProcessing(m.processing);
+      setEnabled(m.enabled);
     });
   }, [props.model]);
 
   const handleChange = async (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const model = event.target.value;
-    await props.state.save('litchi:model', model);
-    setSelectedModel(model);
+    const m = event.target.value;
+    await props.state.save('litchi:model', m);
+    setSelectedModel(m);
   };
 
   const handleChatClick = () => {
@@ -82,31 +85,31 @@ function ModelsComponent(props: {
       <ToolbarButtonComponent
         icon={caIcon}
         onClick={handleChatClick}
-        enabled={!processing}
+        enabled={!enabled}
         tooltip="Chat"
       ></ToolbarButtonComponent>
       <ToolbarButtonComponent
         icon={chIcon}
         onClick={handleHistoricalClick}
-        enabled={!processing}
+        enabled={!enabled}
         tooltip="Chat With Historical"
       ></ToolbarButtonComponent>
       <ToolbarButtonComponent
         icon={ctIcon}
         onClick={handleContextualClick}
-        enabled={!processing}
+        enabled={!enabled}
         tooltip="Chat With Contextual"
       ></ToolbarButtonComponent>
       <ToolbarButtonComponent
         icon={csIcon}
         onClick={handleSelectedClick}
-        enabled={!processing}
+        enabled={!enabled}
         tooltip="Chat With Selected"
       ></ToolbarButtonComponent>
       <ToolbarButtonComponent
         icon={ccIcon}
         onClick={handleSelectedClick}
-        enabled={!processing}
+        enabled={!enabled}
         tooltip="Chat Continuous"
       ></ToolbarButtonComponent>
       <span>
@@ -117,7 +120,7 @@ function ModelsComponent(props: {
           id="model-select"
           value={selectedModel}
           onChange={handleChange}
-          disabled={processing}
+          disabled={enabled}
           className="jp-ToolbarButtonComponent"
         >
           {models.map(model => (

@@ -124,7 +124,7 @@ __webpack_require__.d(exports, {
 /******/ 		// This function allow to reference async chunks
 /******/ 		__webpack_require__.u = (chunkId) => {
 /******/ 			// return url for filenames based on template
-/******/ 			return "" + chunkId + "." + {"lib_index_js":"d0e9f61fc41b63998951","style_index_js":"981978d836ccfd963937"}[chunkId] + ".js";
+/******/ 			return "" + chunkId + "." + {"lib_index_js":"4d49c3ac380f945e3c95","style_index_js":"981978d836ccfd963937","vendors-node_modules_axios_index_js":"f9ca211c988061a67631"}[chunkId] + ".js";
 /******/ 		};
 /******/ 	})();
 /******/ 	
@@ -243,6 +243,7 @@ __webpack_require__.d(exports, {
 /******/ 			var promises = [];
 /******/ 			switch(name) {
 /******/ 				case "default": {
+/******/ 					register("axios", "1.7.7", () => (__webpack_require__.e("vendors-node_modules_axios_index_js").then(() => (() => (__webpack_require__(/*! ./node_modules/axios/index.js */ "./node_modules/axios/index.js"))))));
 /******/ 					register("jupyter-litchi", "0.4.5", () => (__webpack_require__.e("lib_index_js").then(() => (() => (__webpack_require__(/*! ./lib/index.js */ "./lib/index.js"))))));
 /******/ 				}
 /******/ 				break;
@@ -402,6 +403,7 @@ __webpack_require__.d(exports, {
 /******/ 		var moduleToHandlerMapping = {
 /******/ 			"webpack/sharing/consume/default/@jupyterlab/apputils": () => (loadSingletonVersion("default", "@jupyterlab/apputils", false, [1,4,3,5])),
 /******/ 			"webpack/sharing/consume/default/@jupyterlab/statedb": () => (loadSingletonVersion("default", "@jupyterlab/statedb", false, [1,4,2,5])),
+/******/ 			"webpack/sharing/consume/default/axios/axios": () => (loadStrictVersion("default", "axios", false, [1,1,7,7], () => (__webpack_require__.e("vendors-node_modules_axios_index_js").then(() => (() => (__webpack_require__(/*! axios */ "./node_modules/axios/index.js"))))))),
 /******/ 			"webpack/sharing/consume/default/@jupyterlab/cells": () => (loadVersion("default", "@jupyterlab/cells", false, [1,4,2,5])),
 /******/ 			"webpack/sharing/consume/default/@jupyterlab/notebook": () => (loadSingletonVersion("default", "@jupyterlab/notebook", false, [1,4,2,5])),
 /******/ 			"webpack/sharing/consume/default/@jupyterlab/settingregistry": () => (loadSingletonVersion("default", "@jupyterlab/settingregistry", false, [1,4,2,5])),
@@ -415,6 +417,7 @@ __webpack_require__.d(exports, {
 /******/ 			"lib_index_js": [
 /******/ 				"webpack/sharing/consume/default/@jupyterlab/apputils",
 /******/ 				"webpack/sharing/consume/default/@jupyterlab/statedb",
+/******/ 				"webpack/sharing/consume/default/axios/axios",
 /******/ 				"webpack/sharing/consume/default/@jupyterlab/cells",
 /******/ 				"webpack/sharing/consume/default/@jupyterlab/notebook",
 /******/ 				"webpack/sharing/consume/default/@jupyterlab/settingregistry",
@@ -562,4 +565,4 @@ __webpack_require__.d(exports, {
 /******/ 	
 /******/ })()
 ;
-//# sourceMappingURL=remoteEntry.4005ef1d263c3e618561.js.map
+//# sourceMappingURL=remoteEntry.56f04ec7bffeb6df4814.js.map

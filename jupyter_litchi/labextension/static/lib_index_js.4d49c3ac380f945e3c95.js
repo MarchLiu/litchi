@@ -9,23 +9,51 @@
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Message: () => (/* binding */ Message),
 /* harmony export */   alert: () => (/* binding */ alert),
 /* harmony export */   chat: () => (/* binding */ chat),
-/* harmony export */   listModels: () => (/* binding */ listModels)
+/* harmony export */   listModels: () => (/* binding */ listModels),
+/* harmony export */   provider: () => (/* binding */ provider)
 /* harmony export */ });
 /* harmony import */ var _jupyterlab_apputils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @jupyterlab/apputils */ "webpack/sharing/consume/default/@jupyterlab/apputils");
 /* harmony import */ var _jupyterlab_apputils__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_jupyterlab_apputils__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _ollama__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./ollama */ "./lib/ollama.js");
+/* harmony import */ var _kimi__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./kimi */ "./lib/kimi.js");
+/* harmony import */ var _deepseek__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./deepseek */ "./lib/deepseek.js");
 // SendRequestComponent.tsx
 
-class Message {
-    constructor(role, content) {
-        this.role = role;
-        this.content = content;
+
+
+
+function provider(settings) {
+    const providers = settings.get('providers').composite;
+    const name = settings.get('selected').composite;
+    if (!providers) {
+        throw new Error('Not any provider in settings');
     }
-    static async startUp(settings) {
-        const system = settings.get('system').composite.toString();
-        return new Message('system', system);
+    if (!name) {
+        throw new Error('Not any provider has been selected');
+    }
+    for (const provider of providers) {
+        if (provider !== null) {
+            const p = provider;
+            if (p.name === name) {
+                return createProvider(p);
+            }
+        }
+    }
+    throw new Error(`provider not found: ${name}`);
+}
+function createProvider(settings) {
+    const category = settings.category;
+    switch (category) {
+        case 'ollama':
+            return _ollama__WEBPACK_IMPORTED_MODULE_1__.ollama.createProvider(settings);
+        case 'kimi':
+            return _kimi__WEBPACK_IMPORTED_MODULE_2__.kimi.createProvider(settings);
+        case 'deepseek':
+            return _deepseek__WEBPACK_IMPORTED_MODULE_3__.deepseek.createProvider(settings);
+        default:
+            throw new Error(`provider type unknown: ${category}`);
     }
 }
 class ChatRequest {
@@ -40,14 +68,12 @@ async function chat(url, key, session, message, model) {
         const messages = [...session, message];
         const request = new ChatRequest(model, messages);
         const headers = requestHeaders(key);
-        console.log(request);
         const resp = await fetch(url, {
             method: 'POST',
             headers: headers,
             body: JSON.stringify(request)
         });
         const data = await resp.json();
-        console.log(data);
         if (data.message !== undefined) {
             return data.message;
         }
@@ -72,6 +98,7 @@ async function listModels(url, key) {
             method: 'GET',
             headers: headers
         });
+        console.log(headers);
         return response
             .json()
             .then(data => {
@@ -102,12 +129,64 @@ function requestHeaders(key) {
         Accept: 'application/json'
     });
     if (key !== undefined && key.length > 0) {
-        headers.set('Authorization', key);
+        headers.set('Authorization', `Bearer ${key}`);
     }
     return headers;
 }
 async function alert(message) {
     return (0,_jupyterlab_apputils__WEBPACK_IMPORTED_MODULE_0__.showErrorMessage)('Litchi', message, [_jupyterlab_apputils__WEBPACK_IMPORTED_MODULE_0__.Dialog.okButton()]);
+}
+
+
+/***/ }),
+
+/***/ "./lib/commons.js":
+/*!************************!*\
+  !*** ./lib/commons.js ***!
+  \************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   Message: () => (/* binding */ Message),
+/* harmony export */   initSetting: () => (/* binding */ initSetting)
+/* harmony export */ });
+class Message {
+    constructor(role, content) {
+        this.role = role;
+        this.content = content;
+    }
+    static async startUp(settings) {
+        const system = settings.get('system').composite.toString();
+        return new Message('system', system);
+    }
+}
+function initSetting(category) {
+    switch (category) {
+        case 'ollama':
+            return {
+                baseUrl: 'http://localhost:11434',
+                category: 'ollama',
+                name: '',
+                active: false
+            };
+        case 'kimi':
+            return {
+                authKey: '',
+                category: 'kimit',
+                name: '',
+                active: false
+            };
+        case 'openai':
+            return {
+                authKey: '',
+                category: 'openai',
+                name: '',
+                active: false
+            };
+        default:
+            throw new Error(`category unknown: ${category}`);
+    }
 }
 
 
@@ -142,6 +221,97 @@ var CommandIDs;
 })(CommandIDs || (CommandIDs = {}));
 const LITCHI_MESSAGE_ROLE = 'litchi:message:role';
 const LITCHI_TOOLBAR_FACTORY = 'litchi:toolbar-factory';
+
+
+/***/ }),
+
+/***/ "./lib/deepseek.js":
+/*!*************************!*\
+  !*** ./lib/deepseek.js ***!
+  \*************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   deepseek: () => (/* binding */ deepseek)
+/* harmony export */ });
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! axios */ "webpack/sharing/consume/default/axios/axios");
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(axios__WEBPACK_IMPORTED_MODULE_0__);
+
+var deepseek;
+(function (deepseek) {
+    function createProvider(options) {
+        return new Provider(options);
+    }
+    deepseek.createProvider = createProvider;
+    class Provider {
+        get listModelUrl() {
+            return this._baseUrl + '/v1/api/models';
+        }
+        get chatUrl() {
+            return this._baseUrl + '/api/chat';
+        }
+        chatRequest(model, messages) {
+            return {
+                url: this.chatUrl,
+                method: 'post',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${this._authKey}`
+                },
+                body: JSON.stringify({
+                    model: model,
+                    messages: messages,
+                    stream: false
+                })
+            };
+        }
+        constructor(options) {
+            this._baseUrl = 'http://api.moonshot.cn';
+            this._authKey = options.authKey;
+            this._name = options.name;
+        }
+        async chat(session, message, model) {
+            const messages = [...session, message];
+            const resp = await axios__WEBPACK_IMPORTED_MODULE_0___default().get(this.chatRequest(model, messages));
+            try {
+                const data = resp.data;
+                console.log(data);
+                if (data.choices !== undefined) {
+                    const msgs = data.choices.map((c) => c.message);
+                    if (msgs.length > 0) {
+                        return msgs[0];
+                    }
+                }
+            }
+            catch (error) {
+                console.error('Error sending request to server:', error);
+                throw new Error('chat failed, maybe server gone or get a invalid response. Please check settings or explorer console if you are a developer');
+            }
+            console.error('message not success');
+            return { content: '', role: 'assistant' };
+        }
+        async listModels() {
+            return axios__WEBPACK_IMPORTED_MODULE_0___default().get(this.listModelUrl, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json'
+                }
+            })
+                .then(resp => {
+                if (resp.status !== (axios__WEBPACK_IMPORTED_MODULE_0___default().HttpStatusCode).Ok) {
+                    throw new Error(`${this._name} error: list model request received error status: ${resp.statusText}`);
+                }
+                const text = resp.data.toString();
+                const data = JSON.parse(text);
+                return data['data'].map((m) => {
+                    return m.id;
+                });
+            });
+        }
+    }
+    deepseek.Provider = Provider;
+})(deepseek || (deepseek = {}));
 
 
 /***/ }),
@@ -267,6 +437,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _jupyterlab_apputils__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_jupyterlab_apputils__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _jupyterlab_statedb__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @jupyterlab/statedb */ "webpack/sharing/consume/default/@jupyterlab/statedb");
 /* harmony import */ var _jupyterlab_statedb__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_jupyterlab_statedb__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _commons__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./commons */ "./lib/commons.js");
 /* harmony import */ var _api__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./api */ "./lib/api.js");
 /* harmony import */ var _jupyterlab_cells__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @jupyterlab/cells */ "webpack/sharing/consume/default/@jupyterlab/cells");
 /* harmony import */ var _jupyterlab_cells__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_jupyterlab_cells__WEBPACK_IMPORTED_MODULE_2__);
@@ -284,7 +455,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _settings__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./settings */ "./lib/settings.js");
 /* harmony import */ var _icons__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./icons */ "./lib/icons.js");
 /* harmony import */ var _templates__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./templates */ "./lib/templates.js");
-/* harmony import */ var _markdown__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./markdown */ "./lib/markdown.js");
+/* harmony import */ var _markdown__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ./markdown */ "./lib/markdown.js");
+
 
 
 
@@ -328,7 +500,7 @@ async function activate(app, palette, tracker, settingRegistry, toolbarRegistry,
             await chatActivate(app, settingRegistry, tracker, model, state, 'chat');
         },
         icon: _icons__WEBPACK_IMPORTED_MODULE_10__.caIcon,
-        isEnabled: () => model.idle
+        isEnabled: () => model.enabled
     });
     palette.addItem({ command: _constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.CHAT, category: 'jupyter-Litchi' });
     app.commands.addCommand(_constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.CONTEXTUAL, {
@@ -337,7 +509,7 @@ async function activate(app, palette, tracker, settingRegistry, toolbarRegistry,
             await chatActivate(app, settingRegistry, tracker, model, state, 'contextual');
         },
         icon: _icons__WEBPACK_IMPORTED_MODULE_10__.ctIcon,
-        isEnabled: () => model.idle
+        isEnabled: () => model.enabled
     });
     palette.addItem({
         command: _constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.CONTEXTUAL,
@@ -349,7 +521,7 @@ async function activate(app, palette, tracker, settingRegistry, toolbarRegistry,
             await chatActivate(app, settingRegistry, tracker, model, state, 'historical');
         },
         icon: _icons__WEBPACK_IMPORTED_MODULE_10__.chIcon,
-        isEnabled: () => model.idle
+        isEnabled: () => model.enabled
     });
     palette.addItem({
         command: _constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.HISTORICAL,
@@ -361,7 +533,7 @@ async function activate(app, palette, tracker, settingRegistry, toolbarRegistry,
             await chatActivate(app, settingRegistry, tracker, model, state, 'selected');
         },
         icon: _icons__WEBPACK_IMPORTED_MODULE_10__.csIcon,
-        isEnabled: () => model.idle
+        isEnabled: () => model.enabled
     });
     palette.addItem({
         command: _constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.SELECTED,
@@ -380,7 +552,7 @@ async function activate(app, palette, tracker, settingRegistry, toolbarRegistry,
             });
         },
         icon: _icons__WEBPACK_IMPORTED_MODULE_10__.litchiIcon,
-        isEnabled: () => model.idle,
+        isEnabled: () => model.enabled,
         isVisible: () => {
             const cell = tracker.activeCell;
             if (cell === null) {
@@ -399,7 +571,7 @@ async function activate(app, palette, tracker, settingRegistry, toolbarRegistry,
             await splitCell(app, settingRegistry, tracker);
         },
         icon: _icons__WEBPACK_IMPORTED_MODULE_10__.scIcon,
-        isEnabled: () => model.idle,
+        isEnabled: () => model.enabled,
         isVisible: () => {
             const current = tracker.activeCell;
             return (current === null || current === void 0 ? void 0 : current.model.sharedModel.cell_type) === 'markdown';
@@ -470,14 +642,30 @@ async function activate(app, palette, tracker, settingRegistry, toolbarRegistry,
         command: _constants__WEBPACK_IMPORTED_MODULE_7__.CommandIDs.UNIT_TEST,
         category: 'jupyter-Litchi'
     });
-    model.stateChanged.connect(w => {
-        refreshPage(tracker, w.showRoles);
+    model.stateChanged.connect(m => {
+        refreshPage(tracker, m.showRoles);
         settingRegistry.get(_constants__WEBPACK_IMPORTED_MODULE_7__.LITCHI_ID, 'continuous-mode').then(continuous => {
             if (continuous.composite !== model.continuous) {
+                console.log(`continuous mode: ${continuous.composite} and model.continuous: ${model.continuous}`);
                 settingRegistry
                     .set(_constants__WEBPACK_IMPORTED_MODULE_7__.LITCHI_ID, 'continuous-mode', model.continuous)
                     .then(() => {
                     console.log('Continuous mode changed.');
+                });
+            }
+        });
+        settingRegistry.get(_constants__WEBPACK_IMPORTED_MODULE_7__.LITCHI_ID, 'providers').then(providers => {
+            const ps = providers.composite.map(p => p);
+            const str = JSON.stringify(m.providers);
+            const data = JSON.parse(str);
+            if (ps !== data) {
+                settingRegistry
+                    .set(_constants__WEBPACK_IMPORTED_MODULE_7__.LITCHI_ID, 'providers', data)
+                    .then(() => {
+                    console.log('Providers settings changed.');
+                })
+                    .catch(err => {
+                    console.error(err);
                 });
             }
         });
@@ -507,7 +695,10 @@ async function activate(app, palette, tracker, settingRegistry, toolbarRegistry,
     });
     app.restored.then(() => {
         if (formRendererRegistry) {
-            (0,_settings__WEBPACK_IMPORTED_MODULE_13__.renderer)(settingRegistry, formRendererRegistry, translator);
+            (0,_settings__WEBPACK_IMPORTED_MODULE_13__.renderer)(settingRegistry, formRendererRegistry, translator, model);
+        }
+        else {
+            console.log('form rendererResgistry not activated');
         }
         settingRegistry.get(_constants__WEBPACK_IMPORTED_MODULE_7__.LITCHI_ID, 'translators').then(trans => {
             const items = trans.composite || [];
@@ -525,7 +716,7 @@ async function activate(app, palette, tracker, settingRegistry, toolbarRegistry,
     });
 }
 async function chatActivate(app, registry, tracker, model, state, subTask) {
-    var _a, _b, _c, _d;
+    var _a, _b;
     try {
         if (model.processing) {
             console.log('an other process is running');
@@ -559,12 +750,12 @@ async function chatActivate(app, registry, tracker, model, state, subTask) {
         }
         const settings = await registry.load(_constants__WEBPACK_IMPORTED_MODULE_7__.LITCHI_ID);
         const session = [
-            await _api__WEBPACK_IMPORTED_MODULE_12__.Message.startUp(settings),
+            await _commons__WEBPACK_IMPORTED_MODULE_14__.Message.startUp(settings),
             ...createContext(subTask, notebook)
         ];
-        const url = settings.get('chat').composite.toString();
-        const key = (_d = (_c = settings.get('key')) === null || _c === void 0 ? void 0 : _c.composite) === null || _d === void 0 ? void 0 : _d.toString();
-        const message = await (0,_api__WEBPACK_IMPORTED_MODULE_12__.chat)(url, key, session, latest, aiModel).catch(_api__WEBPACK_IMPORTED_MODULE_12__.alert);
+        const provider = model.provider;
+        const reply = await provider.chat(session, latest, aiModel).catch(_api__WEBPACK_IMPORTED_MODULE_12__.alert);
+        const message = reply;
         if (message.content !== undefined && message.content.length > 0) {
             const cellModel = new _jupyterlab_cells__WEBPACK_IMPORTED_MODULE_2__.MarkdownCellModel();
             cellModel.sharedModel.setSource(message.content);
@@ -667,7 +858,7 @@ function cellToMessage(cell) {
         }
         content = `\`\`\`${language}\n${content}\n\`\`\``;
     }
-    return new _api__WEBPACK_IMPORTED_MODULE_12__.Message(role, content);
+    return new _commons__WEBPACK_IMPORTED_MODULE_14__.Message(role, content);
 }
 async function refreshPage(tracker, showRoles) {
     var _a, _b;
@@ -707,7 +898,7 @@ async function splitCell(app, registry, tracker) {
         return;
     }
     const content = origin.model.sharedModel.source;
-    const segments = (0,_markdown__WEBPACK_IMPORTED_MODULE_14__.to_segments)(content);
+    const segments = (0,_markdown__WEBPACK_IMPORTED_MODULE_15__.to_segments)(content);
     for (const idx in segments) {
         const segment = segments[idx];
         await app.commands.execute('notebook:insert-cell-below').then(() => {
@@ -737,6 +928,98 @@ function langInMime(mime) {
             return token;
     }
 }
+
+
+/***/ }),
+
+/***/ "./lib/kimi.js":
+/*!*********************!*\
+  !*** ./lib/kimi.js ***!
+  \*********************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   kimi: () => (/* binding */ kimi)
+/* harmony export */ });
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! axios */ "webpack/sharing/consume/default/axios/axios");
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(axios__WEBPACK_IMPORTED_MODULE_0__);
+
+var kimi;
+(function (kimi) {
+    function createProvider(options) {
+        return new Provider(options);
+    }
+    kimi.createProvider = createProvider;
+    class Provider {
+        get listModelUrl() {
+            return this._baseUrl + '/api/models';
+        }
+        get chatUrl() {
+            return this._baseUrl + '/api/chat/completions';
+        }
+        chatRequest(model, messages) {
+            return {
+                url: this.chatUrl,
+                method: 'post',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${this._authKey}`
+                },
+                body: JSON.stringify({
+                    model: model,
+                    messages: messages,
+                    stream: false
+                })
+            };
+        }
+        constructor(options) {
+            this._baseUrl = 'https://api.moonshot.cn/v1';
+            this._authKey = options.authKey;
+            this._name = options.name;
+        }
+        async chat(session, message, model) {
+            const messages = [...session, message];
+            const resp = await axios__WEBPACK_IMPORTED_MODULE_0___default().get(this.chatRequest(model, messages));
+            try {
+                const data = resp.data;
+                console.log(data);
+                if (data.choices !== undefined) {
+                    const msgs = data.choices.map((c) => c.message);
+                    if (msgs.length > 0) {
+                        return msgs[0];
+                    }
+                }
+            }
+            catch (error) {
+                console.error('Error sending request to server:', error);
+                throw new Error('chat failed, maybe server gone or get a invalid response. Please check settings or explorer console if you are a developer');
+            }
+            console.error('message not success');
+            return { content: '', role: 'assistant' };
+        }
+        async listModels() {
+            return axios__WEBPACK_IMPORTED_MODULE_0___default().get(this.listModelUrl, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    Authorization: `Bearer ${this._authKey}`
+                }
+            })
+                .then(resp => {
+                if (resp.status !== (axios__WEBPACK_IMPORTED_MODULE_0___default().HttpStatusCode).Ok) {
+                    throw new Error(`${this._name} error: list model request received error status: ${resp.statusText}`);
+                }
+                const text = resp.data.toString();
+                const data = JSON.parse(text);
+                return data['data'].map((m) => {
+                    return m.id;
+                });
+            });
+        }
+    }
+    kimi.Provider = Provider;
+})(kimi || (kimi = {}));
 
 
 /***/ }),
@@ -901,10 +1184,16 @@ class Model extends _jupyterlab_apputils__WEBPACK_IMPORTED_MODULE_0__.VDomModel 
         this._showRoles = false;
         this._processing = false;
         this._idle = true;
+        this._providers = [];
         settingsRegistry.load(_constants__WEBPACK_IMPORTED_MODULE_1__.LITCHI_ID).then(settings => {
-            this.continuous = settings.get('talking-mode').composite;
+            this.continuous = settings.get('continuous-mode').composite;
+            const ps = settings.get('providers')
+                .composite;
+            this._providers = ps;
+            return ps;
         });
         this._continuous = false;
+        this._provider = undefined;
     }
     get showRoles() {
         return this._showRoles;
@@ -928,10 +1217,110 @@ class Model extends _jupyterlab_apputils__WEBPACK_IMPORTED_MODULE_0__.VDomModel 
         this._processing = value;
         this.stateChanged.emit();
     }
+    get enabled() {
+        return !this.processing && this.provider !== undefined;
+    }
     get idle() {
         return this._idle;
     }
+    get provider() {
+        return this._provider;
+    }
+    set provider(value) {
+        this._provider = value;
+    }
+    get providers() {
+        return this._providers;
+    }
+    set providers(value) {
+        this._providers = value;
+    }
+    removeProvider(index) {
+        return this._providers.splice(index, 1);
+    }
+    addProviders(provider) {
+        this._providers = [...this.providers, provider];
+    }
 }
+
+
+/***/ }),
+
+/***/ "./lib/ollama.js":
+/*!***********************!*\
+  !*** ./lib/ollama.js ***!
+  \***********************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   ollama: () => (/* binding */ ollama)
+/* harmony export */ });
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! axios */ "webpack/sharing/consume/default/axios/axios");
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(axios__WEBPACK_IMPORTED_MODULE_0__);
+
+var ollama;
+(function (ollama) {
+    function createProvider(options) {
+        return new Provider(options);
+    }
+    ollama.createProvider = createProvider;
+    class Provider {
+        get listModelUrl() {
+            return this._baseUrl + '/api/tags';
+        }
+        get chatUrl() {
+            return this._baseUrl + '/api/chat';
+        }
+        chatRequest(model, messages) {
+            return {
+                url: this.chatUrl,
+                method: 'post',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: model,
+                    messages: messages,
+                    stream: false
+                })
+            };
+        }
+        constructor(options) {
+            this._baseUrl = options.baseUrl;
+            this._name = options.name;
+        }
+        async chat(session, message, model) {
+            const messages = [...session, message];
+            const resp = await axios__WEBPACK_IMPORTED_MODULE_0___default().get(this.chatRequest(model, messages));
+            try {
+                const data = resp.data;
+                console.log(data);
+                if (data.message !== undefined) {
+                    return data.message;
+                }
+            }
+            catch (error) {
+                console.error('Error sending request to server:', error);
+                throw new Error('chat failed, maybe server gone or get a invalid response. Please check settings or explorer console if you are a developer');
+            }
+            console.error('message not success');
+            return { content: '', role: 'assistant' };
+        }
+        async listModels() {
+            return axios__WEBPACK_IMPORTED_MODULE_0___default().get(this.listModelUrl).then(resp => {
+                if (resp.status !== (axios__WEBPACK_IMPORTED_MODULE_0___default().HttpStatusCode).Ok) {
+                    throw new Error(`${this._name} error: list model request received error status: ${resp.statusText}`);
+                }
+                const data = resp.data;
+                return data['models'].map((m) => {
+                    return m.name;
+                });
+            });
+        }
+    }
+    ollama.Provider = Provider;
+})(ollama || (ollama = {}));
 
 
 /***/ }),
@@ -944,28 +1333,38 @@ class Model extends _jupyterlab_apputils__WEBPACK_IMPORTED_MODULE_0__.VDomModel 
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   renderProvidersPanel: () => (/* binding */ renderProvidersPanel),
+/* harmony export */   renderSelected: () => (/* binding */ renderSelected),
 /* harmony export */   renderSystemPrompt: () => (/* binding */ renderSystemPrompt),
 /* harmony export */   renderer: () => (/* binding */ renderer)
 /* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "webpack/sharing/consume/default/react");
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _constants__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./constants */ "./lib/constants.js");
+/* harmony import */ var _jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @jupyterlab/ui-components */ "webpack/sharing/consume/default/@jupyterlab/ui-components");
+/* harmony import */ var _jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react */ "webpack/sharing/consume/default/react");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _constants__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./constants */ "./lib/constants.js");
 
 
-// import validatorAjv8 from '@rjsf/validator-ajv8';
-function renderer(settingRegistry, formRegistry, translator) {
+
+function renderer(settingRegistry, formRegistry, translator, model) {
     const systemPromptRenderer = {
         fieldRenderer: props => {
             return renderSystemPrompt(props);
         }
     };
-    formRegistry.addRenderer(`${_constants__WEBPACK_IMPORTED_MODULE_1__.LITCHI_ID}.system`, systemPromptRenderer);
-    // const providersRenderer: IFormRenderer = {
-    //   fieldRenderer: props => {
-    //     return renderProviders(translator, props);
-    //   }
-    // };
-    // formRegistry.addRenderer(`${LITCHI_ID}.providers.[*]`, providersRenderer);
+    formRegistry.addRenderer(`${_constants__WEBPACK_IMPORTED_MODULE_2__.LITCHI_ID}.system`, systemPromptRenderer);
+    const providersRenderer = {
+        fieldRenderer: props => {
+            return renderProvidersPanel(props, model);
+        }
+    };
+    formRegistry.addRenderer(`${_constants__WEBPACK_IMPORTED_MODULE_2__.LITCHI_ID}.providers`, providersRenderer);
+    const selectedRenderer = {
+        fieldRenderer: props => {
+            return renderSelected(props);
+        }
+    };
+    formRegistry.addRenderer(`${_constants__WEBPACK_IMPORTED_MODULE_2__.LITCHI_ID}.selected`, selectedRenderer);
 }
 /**
  * System Prompt renderer.
@@ -973,85 +1372,138 @@ function renderer(settingRegistry, formRegistry, translator) {
 function renderSystemPrompt(props) {
     const { schema } = props;
     const title = schema.title;
-    const desc = schema.description;
     const settings = props.formContext.settings;
     const settingData = settings.get('system').composite.toString();
-    const [system, setSystem] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(settingData);
+    const [system, setSystem] = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(settingData);
     const onSettingChange = (e) => {
         const value = e.target.value;
         settings.set('system', value).catch(console.error);
         setSystem(value);
     };
-    return (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null,
-        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("fieldset", null,
-            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("legend", null, title),
-            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", { className: "field-description" }, desc),
-            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { key: "system", className: "form-group large-field" },
-                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", null,
-                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h3", null,
-                        " ",
-                        desc,
-                        " "),
-                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "inputFieldWrapper" },
-                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("textarea", { className: "form-control", value: system, onChange: onSettingChange })))))));
+    return (react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", null,
+        react__WEBPACK_IMPORTED_MODULE_1___default().createElement("fieldset", null,
+            react__WEBPACK_IMPORTED_MODULE_1___default().createElement("h3", null, title),
+            react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", { key: "system", className: "form-group large-field" },
+                react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", null,
+                    react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", { className: "inputFieldWrapper" },
+                        react__WEBPACK_IMPORTED_MODULE_1___default().createElement("textarea", { className: "form-control jp-InputArea-editor", value: system, onChange: onSettingChange })))))));
 }
 /**
- * Providers Settings renderer.
+ * Provider Selected Renderer.
  */
-// export function renderProviders(translator: ITranslator, props: FieldProps) {
-//   const registry = new EditorExtensionRegistry();
-//   const properties = React.useMemo(() => registry.settingsSchema, []) as any;
-//   const defaultFormData: Record<string, any> = {};
-//   console.log('init providers settings page');
-//   // Only provide customizable options
-//   for (const [key, value] of Object.entries(registry.defaultConfiguration)) {
-//     if (typeof properties[key] !== 'undefined') {
-//       console.log(`property "${key}" load as ${value}`);
-//       defaultFormData[key] = value;
-//     }
-//   }
-//
-//   return (
-//     <div className="jp-FormGroup-contentNormal">
-//       <h3 className="jp-FormGroup-fieldLabel jp-FormGroup-contentItem">
-//         {props.schema.title}
-//       </h3>
-//       {props.schema.description && (
-//         <div className="jp-FormGroup-description">
-//           This is a provider {props.schema.description}
-//         </div>
-//       )}
-//       <FormComponent
-//         schema={{
-//           title: props.schema.title,
-//           description: props.schema.description,
-//           type: 'object',
-//           properties,
-//           additionalProperties: false
-//         }}
-//         validator={validatorAjv8}
-//         formData={{ ...defaultFormData, ...props.formData }}
-//         formContext={{ defaultFormData }}
-//         liveValidate
-//         onChange={e => {
-//           // Only save non-default values
-//           console.log('provider settings changed');
-//           const nonDefault: Record<string, ReadonlyJSONValue> = {};
-//           for (const [property, value] of Object.entries(e.formData ?? {})) {
-//             console.log(`property "${property}" changed to ${value}`);
-//             alert(`property "${property}" changed to ${value}`);
-//             const default_ = defaultFormData[property];
-//             if (default_ === undefined || !JSONExt.deepEqual(value, default_)) {
-//               nonDefault[property] = value;
-//             }
-//           }
-//           props.onChange(nonDefault);
-//         }}
-//         tagName="div"
-//         translator={translator ?? nullTranslator} />
-//     </div>
-//   );
-// }
+function renderSelected(props) {
+    const { schema } = props;
+    const title = schema.title;
+    const desc = schema.description;
+    const settings = props.formContext.settings;
+    // const settingData: IProvider | undefined = settings.get('selected')
+    //   .composite as unknown as IProvider;
+    const [selected, setSelected] = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)('Ollama');
+    const providers = settings.get('providers')
+        .composite;
+    const onProviderSelected = (e) => {
+        const value = e.target.value;
+        setSelected(value);
+        settings.set('selected', selected).catch(console.error);
+    };
+    return (react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", null,
+        react__WEBPACK_IMPORTED_MODULE_1___default().createElement("fieldset", null,
+            react__WEBPACK_IMPORTED_MODULE_1___default().createElement("legend", null, title),
+            react__WEBPACK_IMPORTED_MODULE_1___default().createElement("p", { className: "field-description" }, desc),
+            react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", { key: "system", className: "form-group large-field" },
+                react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", null,
+                    react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", { className: "inputFieldWrapper" },
+                        react__WEBPACK_IMPORTED_MODULE_1___default().createElement("select", { id: "provider-select", value: selected, onChange: onProviderSelected, className: "jp-ToolbarButtonComponent" }, providers.map((item, index) => {
+                            const name = item.name;
+                            return (react__WEBPACK_IMPORTED_MODULE_1___default().createElement("option", { key: name, value: index }, name));
+                        }))))))));
+}
+/**
+ * Provider Settings Panel.
+ */
+function renderProvidersPanel(props, model) {
+    const { schema } = props;
+    const title = schema.title;
+    const desc = schema.description;
+    const settings = props.formContext.settings;
+    const providers = settings.get('providers')
+        .composite;
+    const [ps, setPs] = react__WEBPACK_IMPORTED_MODULE_1___default().useState(providers);
+    return (react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", null,
+        react__WEBPACK_IMPORTED_MODULE_1___default().createElement("fieldset", null,
+            react__WEBPACK_IMPORTED_MODULE_1___default().createElement("legend", null, title),
+            react__WEBPACK_IMPORTED_MODULE_1___default().createElement("p", { className: "field-description" }, desc),
+            ps.map((provider, idx) => {
+                const onDelete = (e) => {
+                    model.removeProvider(idx);
+                    setPs(model.providers);
+                    console.log(`provider ${idx} deleted`);
+                    model.stateChanged.emit();
+                };
+                const onChange = (e) => {
+                    console.log(`provider ${idx} updated`);
+                    setPs(e.target.value);
+                };
+                return settingsForm(idx, provider, onChange, onDelete);
+            }))));
+}
+function settingsForm(index, options, onChange, onDelete) {
+    return (react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", { className: "field-group" },
+        react__WEBPACK_IMPORTED_MODULE_1___default().createElement("legend", null,
+            options.name,
+            react__WEBPACK_IMPORTED_MODULE_1___default().createElement("span", { className: "outer", onClick: onDelete },
+                react__WEBPACK_IMPORTED_MODULE_1___default().createElement("span", { className: "inner" },
+                    react__WEBPACK_IMPORTED_MODULE_1___default().createElement(_jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_0__.deleteIcon.react, { tag: "span", left: "7px", bottom: "5px" })))),
+        react__WEBPACK_IMPORTED_MODULE_1___default().createElement("p", { className: "field-description" },
+            "[",
+            index,
+            "]-",
+            options.category),
+        settingsItem(index, options, onChange)));
+}
+function settingsItem(index, options, onChange) {
+    const category = options.category;
+    switch (category) {
+        case 'kimi':
+            return authKeySettings(index, options, onChange);
+        case 'openai':
+            return authKeySettings(index, options, onChange);
+        case 'deepseek':
+            return authKeySettings(index, options, onChange);
+        case 'ollama':
+            return ollamaSettings(index, options, onChange);
+        default:
+            return react__WEBPACK_IMPORTED_MODULE_1___default().createElement("p", null, "Unsupported category");
+    }
+}
+function ollamaSettings(index, options, onChange) {
+    return (react__WEBPACK_IMPORTED_MODULE_1___default().createElement("fieldset", null,
+        react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", { className: "form-group small-field", key: "name" },
+            react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", { className: "jp-FormGroup-content jp-FormGroup-contentNormal" },
+                react__WEBPACK_IMPORTED_MODULE_1___default().createElement("label", { className: "jp-FormGroup-fieldLabel jp-FormGroup-contentItem inputFieldWrapper jp-FormGroup-content jp-FormGroup-contentNormal" }, "Name:"),
+                react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", { className: "jp-inputFieldWrapper jp-FormGroup-contentItem" },
+                    react__WEBPACK_IMPORTED_MODULE_1___default().createElement("input", { className: "form-control", type: "text", name: "name", value: options.name, onChange: onChange, required: true })))),
+        react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", { className: "form-group large-field", key: "baseUrl" },
+            react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", { className: "jp-FormGroup-content jp-FormGroup-contentNormal" },
+                react__WEBPACK_IMPORTED_MODULE_1___default().createElement("label", { className: "jp-FormGroup-fieldLabel jp-FormGroup-contentItem inputFieldWrapper jp-FormGroup-content jp-FormGroup-contentNormal" }, "Base URL:"),
+                react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", { className: "jp-inputFieldWrapper jp-FormGroup-contentItem" },
+                    react__WEBPACK_IMPORTED_MODULE_1___default().createElement("input", { className: "form-control", type: "text", name: "baseUrl", onChange: onChange, value: options.baseUrl, required: true }))))));
+}
+function authKeySettings(index, options, onChange) {
+    return (react__WEBPACK_IMPORTED_MODULE_1___default().createElement("fieldset", null,
+        react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", { className: "form-group small-field", key: "name" },
+            react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", { className: "jp-FormGroup-content jp-FormGroup-contentNormal" },
+                react__WEBPACK_IMPORTED_MODULE_1___default().createElement("label", { className: "jp-FormGroup-fieldLabel jp-FormGroup-contentItem" }, "Name:"),
+                react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", { className: "jp-inputFieldWrapper jp-FormGroup-contentItem" },
+                    react__WEBPACK_IMPORTED_MODULE_1___default().createElement("input", { className: "form-control", type: "text", name: "name", value: options.name, required: true })))),
+        react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", { className: "form-group large-field", key: "authKey" },
+            react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", { className: "form-group small-field" },
+                react__WEBPACK_IMPORTED_MODULE_1___default().createElement("label", { className: "jp-FormGroup-fieldLabel jp-FormGroup-contentItem inputFieldWrapper jp-FormGroup-content jp-FormGroup-contentNormal" },
+                    options.category,
+                    " Key:"),
+                react__WEBPACK_IMPORTED_MODULE_1___default().createElement("div", { className: "jp-inputFieldWrapper jp-FormGroup-contentItem" },
+                    react__WEBPACK_IMPORTED_MODULE_1___default().createElement("input", { className: "form-control", type: "text", name: "authorizationKey", onChange: onChange, value: options.authKey, required: true }))))));
+}
 
 
 /***/ }),
@@ -1069,9 +1521,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   unitTest: () => (/* binding */ unitTest)
 /* harmony export */ });
 /* harmony import */ var _api__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./api */ "./lib/api.js");
+/* harmony import */ var _commons__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./commons */ "./lib/commons.js");
 /* harmony import */ var _constants__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./constants */ "./lib/constants.js");
 /* harmony import */ var _jupyterlab_cells__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @jupyterlab/cells */ "webpack/sharing/consume/default/@jupyterlab/cells");
 /* harmony import */ var _jupyterlab_cells__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_jupyterlab_cells__WEBPACK_IMPORTED_MODULE_0__);
+
 
 
 
@@ -1103,8 +1557,8 @@ function chat_by_cell(jobName, template, types) {
             return;
         }
         const settings = await registry.load(_constants__WEBPACK_IMPORTED_MODULE_2__.LITCHI_ID);
-        const session = [await _api__WEBPACK_IMPORTED_MODULE_1__.Message.startUp(settings)];
-        const request = new _api__WEBPACK_IMPORTED_MODULE_1__.Message('user', prompt);
+        const session = [await _commons__WEBPACK_IMPORTED_MODULE_3__.Message.startUp(settings)];
+        const request = new _commons__WEBPACK_IMPORTED_MODULE_3__.Message('user', prompt);
         const url = settings.get('chat').composite.toString();
         const key = (_d = (_c = settings.get('key')) === null || _c === void 0 ? void 0 : _c.composite) === null || _d === void 0 ? void 0 : _d.toString();
         model.processing = true;
@@ -1173,15 +1627,17 @@ __webpack_require__.r(__webpack_exports__);
 function ModelsComponent(props) {
     const [models, setModels] = react__WEBPACK_IMPORTED_MODULE_2__.useState([]);
     const [selectedModel, setSelectedModel] = react__WEBPACK_IMPORTED_MODULE_2__.useState('');
-    const [processing, setProcessing] = react__WEBPACK_IMPORTED_MODULE_2__.useState(props.model.processing);
+    const [enabled, setEnabled] = react__WEBPACK_IMPORTED_MODULE_2__.useState(props.model.processing);
     react__WEBPACK_IMPORTED_MODULE_2__.useEffect(() => {
         async function loadModels() {
             var _a;
             try {
                 const settings = await props.registry.load(props.appId);
+                // const pvd = provider(settings);
+                // const modelList = await pvd.listModels();
                 const baseUrl = settings.get('list-models').composite.toString();
                 const key = (_a = settings.get('key').composite) === null || _a === void 0 ? void 0 : _a.toString();
-                const modelList = await (0,_api__WEBPACK_IMPORTED_MODULE_3__.listModels)(baseUrl, key).catch(_api__WEBPACK_IMPORTED_MODULE_3__.alert);
+                const modelList = await (0,_api__WEBPACK_IMPORTED_MODULE_3__.listModels)(baseUrl, key).catch(alert);
                 setModels(modelList);
                 if (modelList.length > 0) {
                     setSelectedModel(modelList[0]);
@@ -1197,13 +1653,13 @@ function ModelsComponent(props) {
     react__WEBPACK_IMPORTED_MODULE_2__.useEffect(() => {
         const stateChanged = props.model.stateChanged;
         stateChanged.connect((m, args) => {
-            setProcessing(m.processing);
+            setEnabled(m.enabled);
         });
     }, [props.model]);
     const handleChange = async (event) => {
-        const model = event.target.value;
-        await props.state.save('litchi:model', model);
-        setSelectedModel(model);
+        const m = event.target.value;
+        await props.state.save('litchi:model', m);
+        setSelectedModel(m);
     };
     const handleChatClick = () => {
         const { commands } = props.app;
@@ -1222,16 +1678,16 @@ function ModelsComponent(props) {
         commands.execute('litchi:selected');
     };
     return (react__WEBPACK_IMPORTED_MODULE_2__.createElement("div", null,
-        react__WEBPACK_IMPORTED_MODULE_2__.createElement(_jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_1__.ToolbarButtonComponent, { icon: _icons__WEBPACK_IMPORTED_MODULE_4__.caIcon, onClick: handleChatClick, enabled: !processing, tooltip: "Chat" }),
-        react__WEBPACK_IMPORTED_MODULE_2__.createElement(_jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_1__.ToolbarButtonComponent, { icon: _icons__WEBPACK_IMPORTED_MODULE_4__.chIcon, onClick: handleHistoricalClick, enabled: !processing, tooltip: "Chat With Historical" }),
-        react__WEBPACK_IMPORTED_MODULE_2__.createElement(_jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_1__.ToolbarButtonComponent, { icon: _icons__WEBPACK_IMPORTED_MODULE_4__.ctIcon, onClick: handleContextualClick, enabled: !processing, tooltip: "Chat With Contextual" }),
-        react__WEBPACK_IMPORTED_MODULE_2__.createElement(_jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_1__.ToolbarButtonComponent, { icon: _icons__WEBPACK_IMPORTED_MODULE_4__.csIcon, onClick: handleSelectedClick, enabled: !processing, tooltip: "Chat With Selected" }),
-        react__WEBPACK_IMPORTED_MODULE_2__.createElement(_jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_1__.ToolbarButtonComponent, { icon: _icons__WEBPACK_IMPORTED_MODULE_4__.ccIcon, onClick: handleSelectedClick, enabled: !processing, tooltip: "Chat Continuous" }),
+        react__WEBPACK_IMPORTED_MODULE_2__.createElement(_jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_1__.ToolbarButtonComponent, { icon: _icons__WEBPACK_IMPORTED_MODULE_4__.caIcon, onClick: handleChatClick, enabled: !enabled, tooltip: "Chat" }),
+        react__WEBPACK_IMPORTED_MODULE_2__.createElement(_jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_1__.ToolbarButtonComponent, { icon: _icons__WEBPACK_IMPORTED_MODULE_4__.chIcon, onClick: handleHistoricalClick, enabled: !enabled, tooltip: "Chat With Historical" }),
+        react__WEBPACK_IMPORTED_MODULE_2__.createElement(_jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_1__.ToolbarButtonComponent, { icon: _icons__WEBPACK_IMPORTED_MODULE_4__.ctIcon, onClick: handleContextualClick, enabled: !enabled, tooltip: "Chat With Contextual" }),
+        react__WEBPACK_IMPORTED_MODULE_2__.createElement(_jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_1__.ToolbarButtonComponent, { icon: _icons__WEBPACK_IMPORTED_MODULE_4__.csIcon, onClick: handleSelectedClick, enabled: !enabled, tooltip: "Chat With Selected" }),
+        react__WEBPACK_IMPORTED_MODULE_2__.createElement(_jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE_1__.ToolbarButtonComponent, { icon: _icons__WEBPACK_IMPORTED_MODULE_4__.ccIcon, onClick: handleSelectedClick, enabled: !enabled, tooltip: "Chat Continuous" }),
         react__WEBPACK_IMPORTED_MODULE_2__.createElement("span", null,
             react__WEBPACK_IMPORTED_MODULE_2__.createElement("label", { htmlFor: "model-select", className: "jp-ToolbarButtonComponent" },
                 "Select Model:",
                 ' '),
-            react__WEBPACK_IMPORTED_MODULE_2__.createElement("select", { id: "model-select", value: selectedModel, onChange: handleChange, disabled: processing, className: "jp-ToolbarButtonComponent" }, models.map(model => (react__WEBPACK_IMPORTED_MODULE_2__.createElement("option", { key: model, value: model }, model)))))));
+            react__WEBPACK_IMPORTED_MODULE_2__.createElement("select", { id: "model-select", value: selectedModel, onChange: handleChange, disabled: enabled, className: "jp-ToolbarButtonComponent" }, models.map(model => (react__WEBPACK_IMPORTED_MODULE_2__.createElement("option", { key: model, value: model }, model)))))));
 }
 /**
  * A notebook widget extension that adds a widget in the notebook header (widget below the toolbar).
@@ -1268,4 +1724,4 @@ class WidgetExtension extends _jupyterlab_ui_components__WEBPACK_IMPORTED_MODULE
 /***/ })
 
 }]);
-//# sourceMappingURL=lib_index_js.d0e9f61fc41b63998951.js.map
+//# sourceMappingURL=lib_index_js.4d49c3ac380f945e3c95.js.map

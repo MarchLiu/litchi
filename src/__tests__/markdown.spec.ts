@@ -82,6 +82,6 @@ graph TD;
     const segments = to_segments(markdown);
 
     expect(segments).toHaveLength(1);
-    expect(segments[0].content).toBe('# Header\nThis is a markdown document.\n```mermaid\ngraph TD;\n    A-->B;\n```');
+    expect(segments[0].content).toBe('# Header\nThis is a markdown document.\n```mermaid\ngraph TD;\nA-->B;\n```');
   });
 });

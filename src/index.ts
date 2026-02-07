@@ -4,7 +4,8 @@ import {
 } from '@jupyterlab/application';
 import { ICommandPalette, IToolbarWidgetRegistry } from '@jupyterlab/apputils';
 import { IStateDB } from '@jupyterlab/statedb';
-import { alert, chat, IMessage, Message } from './api';
+import { Message, IMessage, IProvider } from './commons';
+import { alert } from './api';
 import { MarkdownCellModel } from '@jupyterlab/cells';
 import { INotebookTracker, Notebook } from '@jupyterlab/notebook';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
@@ -68,7 +69,7 @@ export async function activate(
       await chatActivate(app, settingRegistry, tracker, model, state, 'chat');
     },
     icon: caIcon,
-    isEnabled: () => model.idle
+    isEnabled: () => model.enabled
   });
   palette.addItem({ command: CommandIDs.CHAT, category: 'jupyter-Litchi' });
 
@@ -85,7 +86,7 @@ export async function activate(
       );
     },
     icon: ctIcon,
-    isEnabled: () => model.idle
+    isEnabled: () => model.enabled
   });
   palette.addItem({
     command: CommandIDs.CONTEXTUAL,
@@ -105,7 +106,7 @@ export async function activate(
       );
     },
     icon: chIcon,
-    isEnabled: () => model.idle
+    isEnabled: () => model.enabled
   });
   palette.addItem({
     command: CommandIDs.HISTORICAL,
@@ -125,7 +126,7 @@ export async function activate(
       );
     },
     icon: csIcon,
-    isEnabled: () => model.idle
+    isEnabled: () => model.enabled
   });
   palette.addItem({
     command: CommandIDs.SELECTED,
@@ -152,7 +153,7 @@ export async function activate(
       });
     },
     icon: litchiIcon,
-    isEnabled: () => model.idle,
+    isEnabled: () => model.enabled,
     isVisible: () => {
       const cell = tracker.activeCell;
       if (cell === null) {
@@ -172,7 +173,7 @@ export async function activate(
       await splitCell(app, settingRegistry, tracker);
     },
     icon: scIcon,
-    isEnabled: () => model.idle,
+    isEnabled: () => model.enabled,
     isVisible: () => {
       const current = tracker.activeCell;
       return current?.model.sharedModel.cell_type === 'markdown';
@@ -248,14 +249,35 @@ export async function activate(
     category: 'jupyter-Litchi'
   });
 
-  model.stateChanged.connect(w => {
-    refreshPage(tracker, w.showRoles);
+  model.stateChanged.connect(m => {
+    refreshPage(tracker, m.showRoles);
+
     settingRegistry.get(LITCHI_ID, 'continuous-mode').then(continuous => {
-      if (continuous!.composite! !== model.continuous) {
+      if ((continuous!.composite! as boolean) !== model.continuous) {
+        console.log(`continuous mode: ${continuous!.composite} and model.continuous: ${model.continuous}`);
         settingRegistry
           .set(LITCHI_ID, 'continuous-mode', model.continuous)
           .then(() => {
             console.log('Continuous mode changed.');
+          });
+      }
+    });
+
+    settingRegistry.get(LITCHI_ID, 'providers').then(providers => {
+      const ps = (
+        providers.composite! as unknown as ReadonlyPartialJSONArray
+      ).map(p => p as unknown as IProvider);
+
+      const str = JSON.stringify(m.providers);
+      const data = JSON.parse(str);
+      if (ps !== data) {
+        settingRegistry
+          .set(LITCHI_ID, 'providers', data)
+          .then(() => {
+            console.log('Providers settings changed.');
+          })
+          .catch(err => {
+            console.error(err);
           });
       }
     });
@@ -286,7 +308,9 @@ export async function activate(
 
   app.restored.then(() => {
     if (formRendererRegistry) {
-      renderer(settingRegistry, formRendererRegistry, translator);
+      renderer(settingRegistry, formRendererRegistry, translator, model);
+    } else {
+      console.log('form rendererResgistry not activated');
     }
 
     settingRegistry.get(LITCHI_ID, 'translators').then(trans => {
@@ -355,12 +379,9 @@ async function chatActivate(
       ...createContext(subTask, notebook)
     ];
 
-    const url = settings.get('chat')!.composite!.toString();
-    const key = settings.get('key')?.composite?.toString();
-
-    const message = await chat(url, key, session, latest, aiModel!).catch(
-      alert
-    );
+    const provider = model.provider;
+    const reply = await provider!.chat(session, latest, aiModel!).catch(alert);
+    const message = reply!;
     if (message.content !== undefined && message.content.length > 0) {
       const cellModel = new MarkdownCellModel();
       cellModel.sharedModel.setSource(message.content);
